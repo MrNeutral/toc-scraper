@@ -1,6 +1,7 @@
 package com.neutral.tocscrapper.models;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  *
@@ -8,12 +9,17 @@ import java.util.List;
  */
 public class Novel {
 
+    private String id = UUID.randomUUID().toString();
     private final String title;
     private final List<Chapter> chapters;
 
     public Novel(String title, List<Chapter> chapters) {
         this.title = title;
         this.chapters = chapters;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getTitle() {

@@ -14,7 +14,8 @@ public class Main {
             Scrapper scrapper = new Scrapper();
             scrapper.scrape();
         } catch (Exception e) {
-            System.exit(1);
+            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 }
