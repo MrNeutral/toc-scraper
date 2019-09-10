@@ -1,0 +1,26 @@
+.menu-item{
+    -fx-padding: 1 5 1 5;
+}
+.menu{
+    -fx-padding: 1 5 1 5;
+}
+.text-area {
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane .viewport{
+    -fx-background-color: transparent;
+}
+
+
+.text-area .scroll-pane .content{
+    -fx-background-color: transparent;
+}
+
+.text-area .content {
+    -fx-cursor: DEFAULT ;
+}
