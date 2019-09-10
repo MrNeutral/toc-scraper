@@ -1,4 +1,4 @@
-package com.neutral.tocscrapper.models;
+package com.neutral.tocscraper.models;
 
 import java.util.UUID;
 

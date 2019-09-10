@@ -1,8 +1,8 @@
-package com.neutral.tocscrapper.sql;
+package com.neutral.tocscraper.sql;
 
-import com.neutral.tocscrapper.Scrapper;
-import com.neutral.tocscrapper.models.Chapter;
-import com.neutral.tocscrapper.models.Novel;
+import com.neutral.tocscraper.Scraper;
+import com.neutral.tocscraper.models.Chapter;
+import com.neutral.tocscraper.models.Novel;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -59,9 +59,9 @@ public class Database {
                             + "VALUES ('"
                             + novel.getId() + "', E'"
                             + novel.getTitle() + "')");
-                    Scrapper.LOGGER.log(Level.FINEST, "{0} added to queue.", novel.getTitle());
+                    Scraper.LOGGER.log(Level.FINEST, "{0} added to queue.", novel.getTitle());
                 } else {
-                    Scrapper.LOGGER.log(Level.FINEST, "{0} is already in the DB.", novel.getTitle());
+                    Scraper.LOGGER.log(Level.FINEST, "{0} is already in the DB.", novel.getTitle());
                 }
                 for (Chapter chapter : novel.getChapters()) {
                     if (!chapterIds.contains(chapter.getId())) {
@@ -73,9 +73,9 @@ public class Database {
                                 + chapter.getChapters() + "','"
                                 + chapter.getLink() + "')");
 
-                        Scrapper.LOGGER.log(Level.FINEST, "{0}: {1} added to queue.", new Object[]{novel.getTitle(), chapter.getChapters()});
+                        Scraper.LOGGER.log(Level.FINEST, "{0}: {1} added to queue.", new Object[]{novel.getTitle(), chapter.getChapters()});
                     } else {
-                        Scrapper.LOGGER.log(Level.FINEST, "{0}: {1} is already in the DB.", new Object[]{novel.getTitle(), chapter.getChapters()});
+                        Scraper.LOGGER.log(Level.FINEST, "{0}: {1} is already in the DB.", new Object[]{novel.getTitle(), chapter.getChapters()});
                     }
                 }
             }

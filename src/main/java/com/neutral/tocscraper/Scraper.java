@@ -1,8 +1,8 @@
-package com.neutral.tocscrapper;
+package com.neutral.tocscraper;
 
-import com.neutral.tocscrapper.models.Chapter;
-import com.neutral.tocscrapper.models.Novel;
-import com.neutral.tocscrapper.sql.Database;
+import com.neutral.tocscraper.models.Chapter;
+import com.neutral.tocscraper.models.Novel;
+import com.neutral.tocscraper.sql.Database;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
@@ -25,18 +25,18 @@ import org.openqa.selenium.firefox.FirefoxOptions;
  *
  * @author Mr.Neutral
  */
-public class Scrapper {
+public class Scraper {
 
     private final String site = "https://toc.qidianunderground.org/";
     private Database dB = new Database();
     private WebDriver driver;
     private File log = new File("log.txt");
 //    private FileWriter logWriter = new FileWriter(log, true);
-    public static final Logger LOGGER = Logger.getLogger(Scrapper.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(Scraper.class.getName());
     private final List<String> titles = new ArrayList<>();
     private final List<Novel> novels = new ArrayList<>();
 
-    public Scrapper() throws Exception {
+    public Scraper() throws Exception {
         FileHandler handler = new FileHandler("log.txt", false);
         handler.setLevel(Level.ALL);
         LOGGER.setLevel(Level.ALL);
@@ -120,7 +120,7 @@ public class Scrapper {
             while (iterator.hasNext()) {
                 String title = possibleTitles.get(iterator.nextIndex()).text();
                 try {
-                    String regex = "20\\d\\d-\\d\\d-\\d\\d[A-Z]\\d\\d:\\d\\d:\\d\\d[A-Z]";
+                    String regex = "(about)? a?(\\d\\d?)? (month(s)?)?(day(s)?)?(hour(s)?)? ago";
                     titles.add(StringEscapeUtils.escapeEcmaScript(title.split(regex)[0].trim()));
                     LOGGER.log(Level.FINEST, "//Title {0} added.\n", title);
                 } catch (Exception e) {

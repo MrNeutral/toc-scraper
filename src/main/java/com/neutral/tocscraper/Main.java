@@ -1,4 +1,4 @@
-package com.neutral.tocscrapper;
+package com.neutral.tocscraper;
 
 /**
  *
@@ -11,7 +11,7 @@ public class Main {
 //    }
     public static void main(String[] args) {
         try {
-            Scrapper scrapper = new Scrapper();
+            Scraper scrapper = new Scraper();
             scrapper.scrape();
         } catch (Exception e) {
             System.out.println(e.getMessage());
