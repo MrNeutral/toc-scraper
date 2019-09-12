@@ -1,8 +1,10 @@
 package com.neutral.tocscrapergui.services;
 
+import com.neutral.tocscrapergui.App;
 import com.neutral.tocscrapergui.NovelDetailsRetriever;
-import com.neutral.tocscrapergui.models.Novel;
-import com.neutral.tocscrapergui.models.NovelDetails;
+import com.neutral.tocscrapermodels.Novel;
+import com.neutral.tocscrapermodels.NovelDetails;
+import java.util.logging.Level;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -10,6 +12,7 @@ import javafx.beans.property.StringProperty;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import javafx.scene.image.Image;
+import org.jsoup.HttpStatusException;
 
 /**
  *
@@ -18,6 +21,7 @@ import javafx.scene.image.Image;
 public class NovelDetailsRetrievalService extends Service<NovelDetails> {
 
     private Novel novel;
+    private final NovelDetailsRetrievalService service = this;
     private StringProperty statusProperty = new SimpleStringProperty();
     private ObjectProperty<Image> novelImageProperty = new SimpleObjectProperty<>();
 
@@ -35,6 +39,7 @@ public class NovelDetailsRetrievalService extends Service<NovelDetails> {
 
     @Override
     protected void failed() {
+        cancel();
         statusProperty.set("Details not found.");
     }
 
@@ -47,8 +52,10 @@ public class NovelDetailsRetrievalService extends Service<NovelDetails> {
     protected void succeeded() {
         statusProperty.set("Title: "
                 + novel.getTitle() + "\n\n"
-                + valueProperty().getValue().toString());
-        novelImageProperty.set(new Image(valueProperty().getValue().getImageURL()));
+                + "Completed: "
+                + ((novel.isCompleted()) ? "True" : "False") + "\n\n"
+                + valueProperty().get());
+        novelImageProperty.set(new Image(valueProperty().get().getImageURL()));
         reset();
     }
 
@@ -59,7 +66,6 @@ public class NovelDetailsRetrievalService extends Service<NovelDetails> {
 
     @Override
     public boolean cancel() {
-        novel = null;
         return super.cancel();
     }
 
@@ -67,13 +73,26 @@ public class NovelDetailsRetrievalService extends Service<NovelDetails> {
     protected Task<NovelDetails> createTask() {
         return new Task<>() {
             @Override
-            protected NovelDetails call() throws Exception {
+            protected NovelDetails call() {
                 if (novel == null) {
-                    throw new Exception("No valid novel.");
+                    App.LOGGER.log(Level.SEVERE, "No valid novel.");
+                    failed();
                 }
-                NovelDetails details = NovelDetailsRetriever.getNovelDetails(novel);
+                NovelDetails details = null;
+                try {
+                    details = NovelDetailsRetriever.getNovelDetails(novel);
+                } catch (HttpStatusException e) {
+                    App.LOGGER.log(Level.FINER, e.toString());
+                    failed();
+                }
                 return details;
             }
+
+            @Override
+            protected void failed() {
+                service.failed();
+            }
+
         };
     }
 

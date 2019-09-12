@@ -1,7 +1,7 @@
 package com.neutral.tocscrapergui.services;
 
 import com.neutral.tocscrapergui.App;
-import com.neutral.tocscrapergui.models.Novel;
+import com.neutral.tocscrapermodels.Novel;
 import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;

@@ -1,11 +1,12 @@
 package com.neutral.tocscrapergui;
 
-import com.neutral.tocscrapergui.models.Novel;
-import com.neutral.tocscrapergui.models.NovelDetails;
+import com.neutral.tocscrapermodels.Novel;
+import com.neutral.tocscrapermodels.NovelDetails;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
+import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -18,21 +19,24 @@ public class NovelDetailsRetriever {
 
     private static final String URL = "https://www.novelupdates.com/series/";
 
-    public static NovelDetails getNovelDetails(Novel novel) {
+    public static NovelDetails getNovelDetails(Novel novel) throws HttpStatusException {
         NovelDetails details = new NovelDetails();
         String novelURL = novel.getTitle()
-                .replace(" ", "-")
-                .replace(":", "")
                 .replace("(Completed)", "")
+                .replaceAll("[^a-zA-Z0-9 ]", "")
+                .replace(" ", "-")
                 .toLowerCase();
         App.LOGGER.log(Level.FINER, "Getting details for {0} with URL: {1}", new Object[]{novel.getTitle(), novelURL});
         Document doc;
 
         try {
             doc = Jsoup.connect(URL + novelURL).get();
+        } catch (HttpStatusException e) {
+            App.LOGGER.log(Level.FINER, e.toString());
+            throw e;
         } catch (IOException e) {
-            App.LOGGER.log(Level.SEVERE, e.toString(), e);
-            return null;
+            App.LOGGER.log(Level.FINER, e.toString(), e);
+            return details;
         }
 
         details.setImageURL(doc.getElementsByClass("seriesimg").get(0).child(0).attr("src"));
@@ -76,10 +80,6 @@ public class NovelDetailsRetriever {
         details.setTags(tags);
 
         return details;
-    }
-
-    public static void main(String[] args) {
-        System.out.println(getNovelDetails(new Novel("12 Hours After")));
     }
 
 }

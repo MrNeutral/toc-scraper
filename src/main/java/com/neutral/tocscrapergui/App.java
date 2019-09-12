@@ -1,12 +1,10 @@
 package com.neutral.tocscrapergui;
 
-import com.neutral.tocscrapergui.models.Novel;
 import com.neutral.tocscrapergui.services.NovelDetailsRetrievalService;
 import com.neutral.tocscrapergui.services.NovelRetrievalService;
-import com.neutral.tocscrapergui.sql.Database;
+import com.neutral.tocscrapergui.sql.DatabaseRetriever;
+import com.neutral.tocscrapermodels.NovelContainer;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -23,13 +21,18 @@ import javafx.stage.Stage;
 public class App extends Application {
 
     private static Scene scene;
+    public static App APP = null;
     public static final Logger LOGGER = Logger.getLogger(App.class.getName());
-    private static final List<Novel> NOVELS = new ArrayList<>();
-    private static final Database DB = new Database();
+    private static final NovelContainer NOVELS = new NovelContainer();
+    private static final DatabaseRetriever DB = new DatabaseRetriever();
     public static final NovelRetrievalService NOVEL_RETRIEVAL_SERVICE = new NovelRetrievalService();
     public static final NovelDetailsRetrievalService NOVEL_DETAILS_RETRIEVAL_SERVICE = new NovelDetailsRetrievalService();
 
-    public static Database getDB() {
+    public App() {
+        APP = this;
+    }
+
+    public static DatabaseRetriever getDB() {
         return DB;
     }
 
@@ -41,7 +44,7 @@ public class App extends Application {
         stage.show();
     }
 
-    public static List<Novel> getNovels() {
+    public static NovelContainer getNovels() {
         return NOVELS;
     }
 
