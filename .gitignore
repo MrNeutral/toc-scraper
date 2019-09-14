@@ -8,8 +8,8 @@
 
 # Log file
 *.log
-log.txt
-scrape.csv
+log.*
+scrape.*
 
 # BlueJ files
 *.ctxt
