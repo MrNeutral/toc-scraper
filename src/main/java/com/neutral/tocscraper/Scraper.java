@@ -1,8 +1,10 @@
 package com.neutral.tocscraper;
 
-import com.neutral.tocscraper.models.Chapter;
-import com.neutral.tocscraper.models.Novel;
 import com.neutral.tocscraper.sql.Database;
+import com.neutral.tocscrapermodels.Chapter;
+import com.neutral.tocscrapermodels.ChapterContainer;
+import com.neutral.tocscrapermodels.Novel;
+import com.neutral.tocscrapermodels.NovelContainer;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
@@ -34,7 +36,7 @@ public class Scraper {
 //    private FileWriter logWriter = new FileWriter(log, true);
     public static final Logger LOGGER = Logger.getLogger(Scraper.class.getName());
     private final List<String> titles = new ArrayList<>();
-    private final List<Novel> novels = new ArrayList<>();
+    private final NovelContainer novels = new NovelContainer();
 
     public Scraper() throws Exception {
         FileHandler handler = new FileHandler("log.txt", false);
@@ -87,7 +89,7 @@ public class Scraper {
         updateDB();
     }
 
-    public List<Novel> getNovels() {
+    public NovelContainer getNovels() {
         return novels;
     }
 
@@ -97,7 +99,7 @@ public class Scraper {
             writer.write("Title, Chapter(s), Link\n");
             for (Novel novel : novels) {
                 for (Chapter chapter : novel.getChapters()) {
-                    String text = novel.getTitle() + ", " + chapter.getChapters() + ", " + chapter.getLink() + "\n";
+                    String text = novel.getTitle() + ", " + chapter.getTitle() + ", " + chapter.getLink() + "\n";
                     writer.write(text);
                 }
             }
@@ -144,7 +146,7 @@ public class Scraper {
         while (iterator.hasNext()) {
             int index = iterator.nextIndex();
             List<Element> unParsedNovelLinks = iterator.next().children();
-            List<Chapter> parsedNovelLinks = new ArrayList<>();
+            ChapterContainer parsedNovelLinks = new ChapterContainer();
             Novel novel = new Novel(titles.get(index), parsedNovelLinks);
 
             for (Element link : unParsedNovelLinks) {
