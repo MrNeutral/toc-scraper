@@ -12,7 +12,7 @@
             <properties>
                 <exec.args>-classpath %classpath com.neutral.tocscraper.Main</exec.args>
                 <exec.executable>java</exec.executable>
-                <Env.DATABASE_URL>postgres://vzlhdaaoeimggi:217bae05dc3739dd87b12b9562db2208e707dee3b77b21d24c6cf5b9c77acc19@ec2-46-137-187-23.eu-west-1.compute.amazonaws.com:5432/df35qul49481sv</Env.DATABASE_URL>
+                
             </properties>
         </action>
         <action>
@@ -28,7 +28,7 @@
                 <exec.args>-agentlib:jdwp=transport=dt_socket,server=n,address=${jpda.address} -classpath %classpath com.neutral.tocscraper.Main</exec.args>
                 <exec.executable>java</exec.executable>
                 <jpda.listen>true</jpda.listen>
-                <Env.DATABASE_URL>postgres://vzlhdaaoeimggi:217bae05dc3739dd87b12b9562db2208e707dee3b77b21d24c6cf5b9c77acc19@ec2-46-137-187-23.eu-west-1.compute.amazonaws.com:5432/df35qul49481sv</Env.DATABASE_URL>
+                
             </properties>
         </action>
         <action>

@@ -2,10 +2,11 @@ package com.neutral.tocscraper.sql;
 
 import com.neutral.tocscraper.Scraper;
 import com.neutral.tocscrapermodels.Chapter;
+import static com.neutral.tocscrapermodels.Chapter.getDigits;
+import static com.neutral.tocscrapermodels.Chapter.getDigitsAsString;
 import com.neutral.tocscrapermodels.ChapterContainer;
 import com.neutral.tocscrapermodels.DBRow;
 import com.neutral.tocscrapermodels.Novel;
-import static com.neutral.tocscrapermodels.Novel.removeExtra;
 import com.neutral.tocscrapermodels.NovelContainer;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -24,13 +25,30 @@ import org.apache.commons.text.StringEscapeUtils;
 public class Database {
 
     private Connection conn;
-    private String novelIdTable = " novel_id ";
-    private String novelChaptersTable = " novel_chapters ";
-    private String novelId = " novel_id.'_id' ";
-    private String novelName = " novel_id.name ";
-    private String novelNovel = " novel_chapters.novel ";
-    private String novelChapter = " novel_chapters.title ";
-    private String novelLink = " novel_chapters.link ";
+    private final String novelIdTable = " novel_id ";
+    private final String novelChaptersTable = " novel_chapters ";
+    private final String novelStatusTable = " novel_status ";
+    private final String idAtNovelId = " novel_id._id ";
+    private final String nameAtNovelId = " novel_id.name ";
+    private final String novelIdAtNovelChapters = " novel_chapters.novel_id ";
+    private final String titleAtNovelChapters = " novel_chapters.title ";
+    private final String linkAtNovelChapters = " novel_chapters.link ";
+    private final String idAtNovelStatusTable = " novel_status._id ";
+    private final String statusAtNovelStatusTable = " novel_status.status ";
+
+    private final String query
+            = "SELECT\n"
+            + "    " + idAtNovelId + "AS novel_id,\n"
+            + "    " + nameAtNovelId + "AS novel_name,\n"
+            + "    " + linkAtNovelChapters + "AS chapter_link,\n"
+            + "    " + titleAtNovelChapters + "AS chapter_title,\n"
+            + "    " + statusAtNovelStatusTable + "AS novel_status\n"
+            + "FROM\n"
+            + "    " + novelIdTable + "\n"
+            + "INNER JOIN" + novelChaptersTable + "ON" + idAtNovelId + "=" + novelIdAtNovelChapters + "\n"
+            + "INNER JOIN" + novelStatusTable + "ON" + idAtNovelId + "=" + idAtNovelStatusTable + "\n"
+            + "ORDER BY\n"
+            + nameAtNovelId;
 
     public Database() {
         try {
@@ -41,7 +59,7 @@ public class Database {
             String dbUser = "WAOOiOHHaC";
             String dbPass = "GWz5r06J31";
             String dbLink = "remotemysql.com:3306/WAOOiOHHaC";
-            conn = DriverManager.getConnection("jdbc:mysql://" + dbLink, dbUser, dbPass);
+            conn = DriverManager.getConnection("jdbc:mysql://" + dbLink + "?rewriteBatchedStatements=true", dbUser, dbPass);
 
         } catch (SQLException e) {
             System.out.println(e.getMessage());
@@ -53,22 +71,16 @@ public class Database {
     public void updateDB(NovelContainer novelsInMemory) {
         try (Statement statement = conn.createStatement();) {
             //Get novel_id, novel_name, chapter_link, chapter_title
-            ResultSet results = statement.executeQuery(
-                    "SELECT\n"
-                    + "    novel_id._id AS novel_id,\n"
-                    + "    novel_id.name AS novel_name,\n"
-                    + "    novel_chapters.link AS chapter_link,\n"
-                    + "    novel_chapters.title AS chapter_title\n"
-                    + "FROM\n"
-                    + "    novel_id\n"
-                    + "INNER JOIN novel_chapters ON novel_id._id = novel_chapters.novel_id\n"
-                    + "ORDER BY\n"
-                    + "    novel_id.name");
+            ResultSet results = statement.executeQuery(query);
             List<DBRow> rows = new ArrayList<>();
 
             //Create a DBRow entity for every DB row
             while (results.next()) {
-                rows.add(new DBRow(results.getString(1), StringEscapeUtils.escapeEcmaScript(results.getString(2)), results.getString(3), results.getString(4)));
+                rows.add(new DBRow(results.getString(1),
+                        results.getString(2),
+                        results.getString(3), results.getString(4),
+                        Novel.parseStatus(results.getString(5)))
+                );
             }
 
             if (!results.isClosed()) {
@@ -81,34 +93,43 @@ public class Database {
 
             //Iterate through every row in the DB
             for (var row : rows) {
-                //If the database contains a scraped novel
-                if (novelsInMemory.contains(row.getNovelTitle())) {
+                //If the scraped novel is an exact match to the db novel
+                if (novelsInMemory.contains(row.getNovelTitle(), row.getNovelStatus())) {
                     Scraper.LOGGER.log(Level.FINEST, "{0} is already in the DB.", row.getNovelTitle());
-                } //If the database contains an incomplete scraped novel
-                else if (novelsInMemory.contains(row.getNovelTitle().trim() + " (Completed)")
-                        && !novelsToBeUpdated.contains(novelsInMemory.getNovelByName(row.getNovelTitle().trim() + " (Completed)").getTitle())) {
-                    statement.addBatch("UPDATE novel_id SET name = '"
-                            + novelsInMemory.getNovelByName(row.getNovelTitle().trim() + " (Completed)")
+                } //If the scraped novel is a completed version of the db novel
+                else if (novelsInMemory.contains(row.getNovelTitle(), Novel.NovelStatus.COMPLETED)
+                        && !novelsToBeUpdated.contains(row.getNovelTitle())) {
+                    statement.addBatch("UPDATE novel_status SET status = '"
+                            + Novel.NovelStatus.COMPLETED
                             + "' WHERE _id ='"
                             + row.getNovelId() + "'");
-                    novelsToBeUpdated.add(novelsInMemory.getNovelByName(row.getNovelTitle().trim() + " (Completed)"));
-                    Scraper.LOGGER.log(Level.FINEST, "{0} Novel completed, updated title.", row.getNovelTitle());
-                } //If the database contains an unsuspended scraped novel
-                else if (novelsInMemory.contains(row.getNovelTitle().trim() + " (Suspend)")
-                        && !novelsToBeUpdated.contains(novelsInMemory.getNovelByName(row.getNovelTitle().trim() + " (Suspend)").getTitle())) {
-                   statement.addBatch("UPDATE novel_id SET name = '"
-                            + novelsInMemory.getNovelByName(row.getNovelTitle().trim() + " (Suspend)")
+                    novelsToBeUpdated.add(novelsInMemory.getNovelByTitle(row.getNovelTitle()));
+                    Scraper.LOGGER.log(Level.FINEST, "{0}: Novel completed, updated status.", row.getNovelTitle());
+                } //If the scraped novel is a suspended version of the db novel
+                else if (novelsInMemory.contains(row.getNovelTitle(), Novel.NovelStatus.SUSPENDED)
+                        && !novelsToBeUpdated.contains(row.getNovelTitle())) {
+                    statement.addBatch("UPDATE novel_status SET status = '"
+                            + Novel.NovelStatus.SUSPENDED
                             + "' WHERE _id ='"
                             + row.getNovelId() + "'");
-                    novelsToBeUpdated.add(novelsInMemory.getNovelByName(row.getNovelTitle().trim() + " (Suspend)"));
-                    Scraper.LOGGER.log(Level.FINEST, "{0} Novel suspended, updated title.", row.getNovelTitle());
-                } //If the database doesn't contains a novel
+                    novelsToBeUpdated.add(novelsInMemory.getNovelByTitle(row.getNovelTitle()));
+                    Scraper.LOGGER.log(Level.FINEST, "{0}: Novel suspended, updated status.", row.getNovelTitle());
+                } //If there is no equivalent scraped novel for a db novel
+                else if (!novelsInMemory.contains(row.getNovelTitle()) && !novelsToBeUpdated.contains(row.getNovelTitle())) {
+                    statement.addBatch("UPDATE novel_status SET status = '"
+                            + Novel.NovelStatus.UNAVAILABLE
+                            + "' WHERE _id ='"
+                            + row.getNovelId() + "'");
+                    novelsToBeUpdated.add(new Novel(row.getNovelTitle(), Novel.NovelStatus.UNAVAILABLE));
+                    Scraper.LOGGER.log(Level.FINEST, "{0}: Novel not available, updated status.", row.getNovelTitle());
+                    continue;
+                } //If there is no equivalent db novel for a scraped novel
                 else {
                     continue;
                 }
 
                 //Get all scraped chapters of the novel with the current title, ignoring completion status
-                ChapterContainer chaptersInMemory = novelsInMemory.getNovelByNameIgnoreStatus(row.getNovelTitle()).getChapters();
+                ChapterContainer chaptersInMemory = novelsInMemory.getNovelByTitle(row.getNovelTitle()).getChapters();
                 //If scraped chapters of this novel contain this specific chapter
                 if (chaptersInMemory.contains(row.getChapterTitle())) {
                     //If the scraped chapter link is the same as the DB link
@@ -124,10 +145,10 @@ public class Database {
                         Scraper.LOGGER.log(Level.FINEST, "{0}: {1} The link was queued to be updated.", new Object[]{row.getNovelTitle(), row.getChapterTitle()});
                     }
                 } //If the digits are the same as the scraped chapter but the link is different
-                else if (chaptersInMemory.contains(Integer.valueOf(row.getChapterTitle().split("-")[0].trim()))
-                        && !chaptersToBeUpdated.containsLink(chaptersInMemory.getChapterByDigits(Integer.valueOf(row.getChapterTitle().split("-")[0].trim())).getLink())) {
+                else if (chaptersInMemory.contains(getDigits(row.getChapterTitle()))
+                        && !chaptersToBeUpdated.containsLink(chaptersInMemory.getChapterByDigits(getDigits(row.getChapterTitle())).getLink())) {
                     Chapter chapter = chaptersInMemory.
-                            getChapterByDigits(Integer.valueOf(row.getChapterTitle().split("-")[0].trim()));
+                            getChapterByDigits(getDigits(row.getChapterTitle()));
                     statement.addBatch("UPDATE novel_chapters SET link = '"
                             + chapter.getLink() + "', "
                             + "title = '"
@@ -136,7 +157,7 @@ public class Database {
                             + row.getNovelId() + "' AND "
                             + "title = '"
                             + row.getChapterTitle() + "'");
-                    chaptersInMemory.getChapterByTitle(row.getChapterTitle().split("-")[0].trim());
+                    chaptersInMemory.getChapterByTitle(getDigitsAsString(row.getChapterTitle()));
                     Scraper.LOGGER.log(Level.FINEST, "{0}: {1} ({2}) The link was queued to be updated.", new Object[]{row.getNovelTitle(), chapter.getTitle(), chapter.getLink()});
 
                 }
@@ -145,54 +166,48 @@ public class Database {
             statement.executeBatch();
             conn.commit();
 
-            results = statement.executeQuery(
-                    "SELECT\n"
-                    + "    novel_id._id AS novel_id,\n"
-                    + "    novel_id.name AS novel_name,\n"
-                    + "    novel_chapters.link AS chapter_link,\n"
-                    + "    novel_chapters.title AS chapter_title\n"
-                    + "FROM\n"
-                    + "    novel_id\n"
-                    + "INNER JOIN novel_chapters ON novel_id._id = novel_chapters.novel_id\n"
-                    + "ORDER BY\n"
-                    + "    novel_id.name");
+            results = statement.executeQuery(query);
 
             rows.clear();
+
             while (results.next()) {
-                rows.add(new DBRow(results.getString(1), StringEscapeUtils.escapeEcmaScript(results.getString(2)), results.getString(3), results.getString(4)));
+                rows.add(new DBRow(results.getString(1),
+                        results.getString(2),
+                        results.getString(3), results.getString(4),
+                        Novel.parseStatus(results.getString(5)))
+                );
             }
 
             if (!results.isClosed()) {
                 results.close();
             }
 
-            List<String> dbNovelTitles = new ArrayList<>();
-            ChapterContainer novelChapters = new ChapterContainer();
-            rows.forEach(row -> dbNovelTitles.add(removeExtra(row.getNovelTitle())));
+            NovelContainer dbNovels = new NovelContainer();
+            rows.stream()
+                    .distinct()
+                    .forEach(row -> dbNovels.add(new Novel(row.getNovelId(), row.getNovelStatus(), row.getNovelTitle(), new ChapterContainer())));
+            rows.stream()
+                    .forEach(row -> dbNovels.getNovelByTitle(row.getNovelTitle()).getChapters().add(new Chapter(dbNovels.getNovelByTitle(row.getNovelTitle()), row.getChapterTitle(), row.getChapterLink())));
 
             for (Novel novel : novelsInMemory) {
-                novelChapters.clear();
-                //If database doesn't contain a novel with this base title, insert it
-                if (!dbNovelTitles.contains(novel.getBaseTitle())) {
+                //If database doesn't contain a novel with this title, insert it
+                if (!dbNovels.contains(novel.getTitle())) {
                     statement.addBatch("INSERT INTO"
                             + novelIdTable
                             + "VALUES ('"
                             + novel.getId() + "', '"
-                            + novel.getTitle() + "')");
+                            + StringEscapeUtils.escapeEcmaScript(novel.getTitle()) + "')");
+                    statement.addBatch("INSERT INTO"
+                            + novelStatusTable
+                            + "VALUES('"
+                            + novel.getId()
+                            + "', '"
+                            + novel.getStatus() + "')");
                     Scraper.LOGGER.log(Level.FINEST, "{0} added to the queue.", novel.getTitle());
                 }
 
-                for (var row : rows) {
-                    if (removeExtra(row.getNovelTitle()).equals(novel.getBaseTitle())) {
-                        if (row.getNovelTitle().contains("Trafford")) {
-                            System.out.println("");
-                        }
-                        novelChapters.add(new Chapter(row.getChapterTitle(), row.getChapterLink()));
-                    }
-                }
-
                 for (Chapter chapter : novel.getChapters()) {
-                    if (!novelChapters.containsLink(chapter.getLink())) {
+                    if (dbNovels.getNovelByTitle(novel.getTitle()) == null) {
                         statement.addBatch("INSERT INTO"
                                 + novelChaptersTable
                                 + "VALUES ('"
@@ -201,7 +216,17 @@ public class Database {
                                 + chapter.getTitle() + "','"
                                 + chapter.getLink() + "')"
                         );
-                        Scraper.LOGGER.log(Level.FINEST, "{0}: {1} ({2})The link was added to the queue.", new Object[]{novel.getTitle(), chapter.getTitle(), chapter.getLink()});
+                        Scraper.LOGGER.log(Level.FINEST, "{0}: {1} ({2}) The link was added to the queue.", new Object[]{novel.getTitle(), chapter.getTitle(), chapter.getLink()});
+                    } else if (!dbNovels.getNovelByTitle(novel.getTitle()).getChapters().containsLink(chapter.getLink())) {
+                        statement.addBatch("INSERT INTO"
+                                + novelChaptersTable
+                                + "VALUES ('"
+                                + chapter.getId() + "','"
+                                + dbNovels.getNovelByTitle(novel.getTitle()).getId() + "','"
+                                + chapter.getTitle() + "','"
+                                + chapter.getLink() + "')"
+                        );
+                        Scraper.LOGGER.log(Level.FINEST, "{0}: {1} ({2}) The link was added to the queue.", new Object[]{novel.getTitle(), chapter.getTitle(), chapter.getLink()});
 
                     }
                 }
@@ -214,6 +239,7 @@ public class Database {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
+            System.exit(1);
         }
     }
 

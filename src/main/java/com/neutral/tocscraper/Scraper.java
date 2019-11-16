@@ -1,9 +1,13 @@
 package com.neutral.tocscraper;
 
+import com.gargoylesoftware.htmlunit.BrowserVersion;
+import com.gargoylesoftware.htmlunit.WebClient;
 import com.neutral.tocscraper.sql.Database;
 import com.neutral.tocscrapermodels.Chapter;
 import com.neutral.tocscrapermodels.ChapterContainer;
 import com.neutral.tocscrapermodels.Novel;
+import static com.neutral.tocscrapermodels.Novel.parseStatus;
+import static com.neutral.tocscrapermodels.Novel.removeExtra;
 import com.neutral.tocscrapermodels.NovelContainer;
 import java.io.File;
 import java.io.FileWriter;
@@ -14,14 +18,9 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
-import org.apache.commons.text.StringEscapeUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
-import org.openqa.selenium.JavascriptExecutor;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
 
 /**
  *
@@ -30,10 +29,8 @@ import org.openqa.selenium.firefox.FirefoxOptions;
 public class Scraper {
 
     private final String site = "https://toc.qidianunderground.org/";
-    private Database dB = new Database();
-    private WebDriver driver;
-    private File log = new File("log.txt");
-//    private FileWriter logWriter = new FileWriter(log, true);
+    private final Database dB = new Database();
+    private final WebClient client;
     public static final Logger LOGGER = Logger.getLogger(Scraper.class.getName());
     private final List<String> titles = new ArrayList<>();
     private final NovelContainer novels = new NovelContainer();
@@ -44,44 +41,25 @@ public class Scraper {
         LOGGER.setLevel(Level.ALL);
         handler.setFormatter(new SimpleFormatter());
         LOGGER.addHandler(handler);
-        System.setProperty("webdriver.gecko.driver", "/home/cha0snation/Applications/geckodriver");
-        FirefoxOptions firefoxOptions = new FirefoxOptions();
-        firefoxOptions.setHeadless(true);
-        try {
-            driver = new FirefoxDriver(firefoxOptions);
-        } catch (Exception e) {
-            driver.quit();
-            throw new Exception("Driver Initialization error");
-        }
+        client = new WebClient(BrowserVersion.FIREFOX_60);
+        client.getOptions().setPrintContentOnFailingStatusCode(false);
+        client.getOptions().setCssEnabled(false);
+        client.getOptions().setJavaScriptEnabled(true);
+        client.getOptions().setThrowExceptionOnFailingStatusCode(false);
+        client.getOptions().setRedirectEnabled(true);
+        client.setJavaScriptTimeout(10000);
     }
 
     public void scrape() {
-        try {
-            driver.navigate().to(site);
-//            new WebDriverWait(driver, 5000).until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("button")));
-            try {
-                Thread.sleep(10000);
-            } catch (InterruptedException e) {
-                LOGGER.log(Level.FINER, "Waiting for Cloudflare.");
-            }
-            String html = String.valueOf(
-                    ((JavascriptExecutor) driver)
-                            .executeScript("return document.getElementsByTagName('html')[0].innerHTML")
-            );
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                LOGGER.log(Level.FINER, "Waiting for JS.");
-            }
-            driver.quit();
-            if (html.contains("Zombie Sister Strategy")) {
-                LOGGER.log(Level.FINER, "HTML downloaded");
-            }
-            Document doc = Jsoup.parse(html);
+        try (client) {
+            client.getPage(site);
+            client.waitForBackgroundJavaScriptStartingBefore(1000);
+            client.waitForBackgroundJavaScript(10000);
+            Document doc = Jsoup.parse(client.getPage(site).getWebResponse().getContentAsString());
             parseTitles(doc);
             parseChapterLinks(doc);
         } catch (Exception e) {
-            driver.quit();
+            System.exit(1);
             LOGGER.log(Level.SEVERE, e.toString(), e);
         }
 
@@ -115,6 +93,8 @@ public class Scraper {
 
     private void parseTitles(Document doc) throws Exception {
         List<Element> possibleTitles = doc.select(".content p");
+        List<Element> dates = doc.select(".content p small");
+        dates.stream().forEach(Element::remove);
         List<String> titles = new ArrayList<>();
 
         try {
@@ -123,7 +103,7 @@ public class Scraper {
                 String title = possibleTitles.get(iterator.nextIndex()).text();
                 try {
                     String regex = "(about)? a?(\\d\\d?)? (month(s)?)?(day(s)?)?(hour(s)?)? ago";
-                    titles.add(StringEscapeUtils.escapeEcmaScript(title.split(regex)[0].trim()));
+                    titles.add(title.split(regex)[0].trim());
                     LOGGER.log(Level.FINEST, "//Title {0} added.\n", title);
                 } catch (Exception e) {
                     LOGGER.log(Level.SEVERE, e.toString(), e);
@@ -147,8 +127,8 @@ public class Scraper {
             int index = iterator.nextIndex();
             List<Element> unParsedNovelLinks = iterator.next().children();
             ChapterContainer parsedNovelLinks = new ChapterContainer();
-            Novel novel = new Novel(titles.get(index), parsedNovelLinks);
-
+            Novel novel = new Novel(removeExtra(titles.get(index)), parsedNovelLinks, parseStatus(titles.get(index)));
+            
             for (Element link : unParsedNovelLinks) {
                 String linkAdress = "";
                 String chapters = link.text().trim();

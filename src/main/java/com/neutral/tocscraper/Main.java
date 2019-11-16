@@ -6,13 +6,9 @@ package com.neutral.tocscraper;
  */
 public class Main {
 
-//    public static void main(String[] args) {
-//        App.main(args);
-//    }
     public static void main(String[] args) {
         try {
-            Scraper scrapper = new Scraper();
-            scrapper.scrape();
+            new Scraper().scrape();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
