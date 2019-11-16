@@ -10,21 +10,35 @@ import java.util.UUID;
 public class Novel {
 
     private final String id;
-    private final boolean completed;
+    private final NovelStatus status;
     private final String title;
     private final ChapterContainer chapters;
-
-    public Novel(String id, boolean completed, String title, ChapterContainer chapters) {
+    
+    public Novel(String id) {
         this.id = id;
-        this.completed = completed;
+        this.status = null;
+        this.title = null;
+        this.chapters = null;
+    }
+
+    public Novel(String title, NovelStatus status) {
+        this.id = null;
+        this.status = status;
+        this.title = title;
+        this.chapters = null;
+    }
+
+    public Novel(String id, NovelStatus status, String title, ChapterContainer chapters) {
+        this.id = id;
+        this.status = status;
         this.title = title;
         this.chapters = chapters;
     }
 
-    public Novel(String title, ChapterContainer chapters) {
+    public Novel(String title, ChapterContainer chapters, NovelStatus status) {
         this.title = title;
         this.chapters = chapters;
-        this.completed = false;
+        this.status = status;
         this.id = UUID.randomUUID().toString();
     }
 
@@ -36,10 +50,6 @@ public class Novel {
         return title;
     }
 
-    public String getBaseTitle() {
-        return removeExtra(title);
-    }
-
     public ChapterContainer getChapters() {
         return chapters;
     }
@@ -49,8 +59,17 @@ public class Novel {
         return title;
     }
 
-    public boolean isCompleted() {
-        return completed;
+    public NovelStatus getStatus() {
+        return status;
+    }
+
+    public static NovelStatus parseStatus(String status) {
+        if (status.contains("Completed")) {
+            return NovelStatus.COMPLETED;
+        } else if (status.contains("Suspended")) {
+            return NovelStatus.SUSPENDED;
+        }
+        return NovelStatus.ONGOING;
     }
 
     public static String removeExtra(String title) {
@@ -63,14 +82,33 @@ public class Novel {
             return false;
         }
         Novel novel = (Novel) obj;
-        return getBaseTitle().equals(novel.getBaseTitle());
+        return getTitle().equals(novel.getTitle());
     }
 
     @Override
     public int hashCode() {
         int hash = 5;
-        hash = 29 * hash + Objects.hashCode(getBaseTitle());
+        hash = 29 * hash + Objects.hashCode(getTitle());
         return hash;
+    }
+
+    public static enum NovelStatus {
+        COMPLETED("Completed"),
+        SUSPENDED("Suspended"),
+        UNAVAILABLE("Unavailable"),
+        ONGOING("Ongoing");
+
+        private final String name;
+
+        private NovelStatus(String name) {
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
+
     }
 
 }

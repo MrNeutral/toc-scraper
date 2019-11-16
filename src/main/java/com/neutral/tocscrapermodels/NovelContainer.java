@@ -1,5 +1,6 @@
 package com.neutral.tocscrapermodels;
 
+import com.neutral.tocscrapermodels.Novel.NovelStatus;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -24,7 +25,7 @@ public class NovelContainer implements Iterable<Novel> {
         return novels;
     }
 
-    public Novel getNovelByName(String title) {
+    public Novel getNovelByTitle(String title) {
         for (Novel novel : novels) {
             if (novel.getTitle().equals(title)) {
                 return novel;
@@ -32,10 +33,10 @@ public class NovelContainer implements Iterable<Novel> {
         }
         return null;
     }
-
-    public Novel getNovelByNameIgnoreStatus(String title) {
+    
+    public Novel getNovelById(String id) {
         for (Novel novel : novels) {
-            if (novel.getTitle().equals(title) || novel.getTitle().equals(title.replace("(Completed)", "").trim()) || novel.getTitle().equals(title.trim() + " (Completed)") || novel.getTitle().equals(title.replace("(Suspend)", "").trim()) || novel.getTitle().equals(title.trim() + " (Suspend)")) {
+            if (novel.getId().equals(id)) {
                 return novel;
             }
         }
@@ -43,12 +44,15 @@ public class NovelContainer implements Iterable<Novel> {
     }
 
     public boolean contains(String title) {
-        for (Novel novel : novels) {
-            if (novel.getTitle().equals(title)) {
-                return true;
-            }
-        }
-        return false;
+        return novels.stream().anyMatch((novel) -> (novel.getTitle().equals(title)));
+    }
+    
+    public boolean containsId(String id) {
+        return novels.stream().anyMatch((novel) -> (novel.getId().equals(id)));
+    }
+    
+    public boolean contains(String title, NovelStatus status) {
+        return novels.stream().anyMatch((novel) -> (novel.getTitle().equals(title) && novel.getStatus().equals(status)));
     }
 
     public int size() {
