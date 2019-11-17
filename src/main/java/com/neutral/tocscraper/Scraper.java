@@ -6,7 +6,7 @@ import com.neutral.tocscraper.sql.Database;
 import com.neutral.tocscrapermodels.Chapter;
 import com.neutral.tocscrapermodels.ChapterContainer;
 import com.neutral.tocscrapermodels.Novel;
-import static com.neutral.tocscrapermodels.Novel.parseStatus;
+import static com.neutral.tocscrapermodels.Novel.parseStatusFromTitle;
 import static com.neutral.tocscrapermodels.Novel.removeExtra;
 import com.neutral.tocscrapermodels.NovelContainer;
 import java.io.File;
@@ -54,13 +54,13 @@ public class Scraper {
         try (client) {
             client.getPage(site);
             client.waitForBackgroundJavaScriptStartingBefore(1000);
-            client.waitForBackgroundJavaScript(10000);
+            client.waitForBackgroundJavaScript(15000);
             Document doc = Jsoup.parse(client.getPage(site).getWebResponse().getContentAsString());
             parseTitles(doc);
             parseChapterLinks(doc);
         } catch (Exception e) {
-            System.exit(1);
             LOGGER.log(Level.SEVERE, e.toString(), e);
+            System.exit(1);
         }
 
         writeToCSV();
@@ -127,7 +127,7 @@ public class Scraper {
             int index = iterator.nextIndex();
             List<Element> unParsedNovelLinks = iterator.next().children();
             ChapterContainer parsedNovelLinks = new ChapterContainer();
-            Novel novel = new Novel(removeExtra(titles.get(index)), parsedNovelLinks, parseStatus(titles.get(index)));
+            Novel novel = new Novel(removeExtra(titles.get(index)), parsedNovelLinks, parseStatusFromTitle(titles.get(index)));
             
             for (Element link : unParsedNovelLinks) {
                 String linkAdress = "";

@@ -114,8 +114,17 @@ public class Database {
                             + row.getNovelId() + "'");
                     novelsToBeUpdated.add(novelsInMemory.getNovelByTitle(row.getNovelTitle()));
                     Scraper.LOGGER.log(Level.FINEST, "{0}: Novel suspended, updated status.", row.getNovelTitle());
-                } //If there is no equivalent scraped novel for a db novel
-                else if (!novelsInMemory.contains(row.getNovelTitle()) && !novelsToBeUpdated.contains(row.getNovelTitle())) {
+                } //If the scraped novel is an unsuspended/available version of the db novel
+                else if (novelsInMemory.contains(row.getNovelTitle(), Novel.NovelStatus.ONGOING)
+                        && !novelsToBeUpdated.contains(row.getNovelTitle())) {
+                    statement.addBatch("UPDATE novel_status SET status = '"
+                            + Novel.NovelStatus.ONGOING
+                            + "' WHERE _id ='"
+                            + row.getNovelId() + "'");
+                    novelsToBeUpdated.add(novelsInMemory.getNovelByTitle(row.getNovelTitle()));
+                    Scraper.LOGGER.log(Level.FINEST, "{0}: Novel unsuspended/available, updated status.", row.getNovelTitle());
+                } //If there is no equivalent scraped novel for a db novel and the db novel isn't finished
+                else if (!novelsInMemory.contains(row.getNovelTitle()) && !novelsToBeUpdated.contains(row.getNovelTitle()) && !row.getNovelStatus().equals(Novel.NovelStatus.COMPLETED)) {
                     statement.addBatch("UPDATE novel_status SET status = '"
                             + Novel.NovelStatus.UNAVAILABLE
                             + "' WHERE _id ='"
