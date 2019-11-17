@@ -21,19 +21,19 @@ import javafx.stage.Stage;
 public class App extends Application {
 
     private static Scene scene;
-    public static App APP = null;
-    public static final Logger LOGGER = Logger.getLogger(App.class.getName());
-    private static final NovelContainer NOVELS = new NovelContainer();
-    private static final DatabaseRetriever DB = new DatabaseRetriever();
-    public static final NovelRetrievalService NOVEL_RETRIEVAL_SERVICE = new NovelRetrievalService();
-    public static final NovelDetailsRetrievalService NOVEL_DETAILS_RETRIEVAL_SERVICE = new NovelDetailsRetrievalService();
+    public static App App = null;
+    public static final Logger logger = Logger.getLogger(App.class.getName());
+    private static final NovelContainer novels = new NovelContainer();
+    private static final DatabaseRetriever db = new DatabaseRetriever();
+    public static final NovelRetrievalService novelRetrieval = new NovelRetrievalService();
+    public static final NovelDetailsRetrievalService novelDetailsRetrieval = new NovelDetailsRetrievalService();
 
     public App() {
-        APP = this;
+        App = this;
     }
 
     public static DatabaseRetriever getDB() {
-        return DB;
+        return db;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class App extends Application {
     }
 
     public static NovelContainer getNovels() {
-        return NOVELS;
+        return novels;
     }
 
     static void setRoot(String fxml) throws IOException {
@@ -61,12 +61,12 @@ public class App extends Application {
         try {
             FileHandler handler = new FileHandler("log.txt", false);
             handler.setLevel(Level.ALL);
-            LOGGER.setLevel(Level.ALL);
+            logger.setLevel(Level.ALL);
             handler.setFormatter(new SimpleFormatter());
-            LOGGER.addHandler(handler);
-            LOGGER.log(Level.FINE, "Logger Initiated");
+            logger.addHandler(handler);
+            logger.log(Level.FINE, "Logger Initiated");
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, e.toString(), e);
+            logger.log(Level.SEVERE, e.toString(), e);
         }
 
         launch();

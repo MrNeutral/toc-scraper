@@ -8,6 +8,12 @@
 
 # Log file
 *.log
+*.txt
+
+# Other
+web*.java
+web*.fxml
+*.js
 
 # BlueJ files
 *.ctxt

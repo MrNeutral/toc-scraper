@@ -22,8 +22,8 @@ public class NovelDetailsRetrievalService extends Service<NovelDetails> {
 
     private Novel novel;
     private final NovelDetailsRetrievalService service = this;
-    private StringProperty statusProperty = new SimpleStringProperty();
-    private ObjectProperty<Image> novelImageProperty = new SimpleObjectProperty<>();
+    private final StringProperty statusProperty = new SimpleStringProperty();
+    private final ObjectProperty<Image> novelImageProperty = new SimpleObjectProperty<>();
 
     public void setNovel(Novel novel) {
         this.novel = novel;
@@ -39,12 +39,13 @@ public class NovelDetailsRetrievalService extends Service<NovelDetails> {
 
     @Override
     protected void failed() {
-        cancel();
+        reset();
         statusProperty.set("Details not found.");
     }
 
     @Override
     protected void running() {
+        novelImageProperty.set(null);
         statusProperty.set("Getting details...");
     }
 
@@ -52,8 +53,8 @@ public class NovelDetailsRetrievalService extends Service<NovelDetails> {
     protected void succeeded() {
         statusProperty.set("Title: "
                 + novel.getTitle() + "\n\n"
-                + "Completed: "
-                + ((novel.isCompleted()) ? "True" : "False") + "\n\n"
+                + "Status: "
+                + novel.getStatus() + "\n\n"
                 + valueProperty().get());
         novelImageProperty.set(new Image(valueProperty().get().getImageURL()));
         reset();
@@ -75,14 +76,14 @@ public class NovelDetailsRetrievalService extends Service<NovelDetails> {
             @Override
             protected NovelDetails call() {
                 if (novel == null) {
-                    App.LOGGER.log(Level.SEVERE, "No valid novel.");
+                    App.logger.log(Level.SEVERE, "No valid novel.");
                     failed();
                 }
                 NovelDetails details = null;
                 try {
                     details = NovelDetailsRetriever.getNovelDetails(novel);
                 } catch (HttpStatusException e) {
-                    App.LOGGER.log(Level.FINER, e.toString());
+                    App.logger.log(Level.FINER, e.toString());
                     failed();
                 }
                 return details;

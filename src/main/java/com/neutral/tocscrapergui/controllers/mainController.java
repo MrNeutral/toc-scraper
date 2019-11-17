@@ -1,14 +1,15 @@
 package com.neutral.tocscrapergui.controllers;
 
-import static com.neutral.tocscrapergui.App.APP;
-import static com.neutral.tocscrapergui.App.LOGGER;
-import static com.neutral.tocscrapergui.App.NOVEL_DETAILS_RETRIEVAL_SERVICE;
-import static com.neutral.tocscrapergui.App.NOVEL_RETRIEVAL_SERVICE;
+import static com.neutral.tocscrapergui.App.App;
+import static com.neutral.tocscrapergui.App.logger;
+import static com.neutral.tocscrapergui.App.novelDetailsRetrieval;
+import static com.neutral.tocscrapergui.App.novelRetrieval;
 import com.neutral.tocscrapermodels.Chapter;
 import com.neutral.tocscrapermodels.Novel;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
@@ -17,10 +18,14 @@ import javafx.concurrent.Service;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.Cursor;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -36,6 +41,12 @@ public class mainController implements Initializable {
 
     @FXML
     private BorderPane borderPane;
+
+    @FXML
+    private Label novelsLabel;
+
+    @FXML
+    private TextField novelSearch;
 
     @FXML
     private ListView<Novel> novelListView;
@@ -54,6 +65,36 @@ public class mainController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle rb) {
+        novelImageListeners();
+        chapterListViewListeners();
+        novelListViewListeners();
+        novelSearchListeners();
+        getNovelsAndDetails();
+    }
+
+    private void novelImageListeners() {
+        novelImageView.imageProperty().addListener(new ChangeListener<Image>() {
+            @Override
+            public void changed(ObservableValue<? extends Image> ov, Image t, Image t1) {
+                novelImageView.setCursor((t1 == null) ? Cursor.DEFAULT : Cursor.CLOSED_HAND);
+            }
+
+        });
+        novelImageView.setOnMouseClicked(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent t) {
+                if (novelImageView.getImage() != null) {
+                    var string = novelListView.getSelectionModel().selectedItemProperty().get().getTitle()
+                            .replace("[^a-zA-Z0-9 ]", "")
+                            .replace(" ", "-")
+                            .toLowerCase();
+                    App.getHostServices().showDocument("https://www.novelupdates.com/series/" + string);
+                }
+            }
+        });
+    }
+
+    private void chapterListViewListeners() {
         chapterListView.setCellFactory(new Callback<ListView<Chapter>, ListCell<Chapter>>() {
             @Override
             public ListCell<Chapter> call(ListView<Chapter> p) {
@@ -78,55 +119,96 @@ public class mainController implements Initializable {
                     @Override
                     public void handle(MouseEvent t) {
                         if (t.getClickCount() > 1 && chapter.getItem().getLink() != null) {
-                            APP.getHostServices().showDocument(chapter.getItem().getLink());
+                            App.getHostServices().showDocument(chapter.getItem().getLink());
+//                            try {
+//                                Stage stage = new Stage();
+//                                var scene = new Scene(new FXMLLoader(App.class.getResource("/fxml/" + "webView" + ".fxml")).load());
+//                                stage.setScene(scene);
+//                                stage.show();
+//                            } catch (IOException e) {
+//
+//                            }
                         }
                     }
                 });
                 return chapter;
             }
         });
+    }
+
+    private void novelListViewListeners() {
         novelListView.getSelectionModel()
                 .setSelectionMode(SelectionMode.SINGLE);
         novelListView.getSelectionModel()
                 .selectedItemProperty().addListener(new ChangeListener<Novel>() {
                     @Override
-                    public void changed(ObservableValue<? extends Novel> ov, Novel t,
-                            Novel t1
-                    ) {
-                        chapterListView.setItems(new SortedList<>(FXCollections.observableArrayList(t1.getChapters().asList())).sorted());
+                    public void changed(ObservableValue<? extends Novel> ov, Novel t, Novel t1) {
+                        chapterListView
+                                .setItems(new SortedList<>(FXCollections
+                                        .observableArrayList(t1.getChapters().asList())).sorted());
 
                         try {
-                            if (NOVEL_DETAILS_RETRIEVAL_SERVICE.stateProperty().get() == Service.State.RUNNING) {
-                                NOVEL_DETAILS_RETRIEVAL_SERVICE.cancel();
+
+                            if (novelDetailsRetrieval.stateProperty().get() == Service.State.RUNNING) {
+                                novelDetailsRetrieval.cancel();
                             }
-                            NOVEL_DETAILS_RETRIEVAL_SERVICE.setNovel(t1);
-                            NOVEL_DETAILS_RETRIEVAL_SERVICE.start();
-                            detailsTextArea.textProperty().bind(NOVEL_DETAILS_RETRIEVAL_SERVICE.statusProperty());
-                            if (NOVEL_DETAILS_RETRIEVAL_SERVICE.novelImageProperty().get() != null) {
-                                novelImageView.imageProperty().bind(NOVEL_DETAILS_RETRIEVAL_SERVICE.novelImageProperty());
+                            novelDetailsRetrieval.setNovel(t1);
+                            novelDetailsRetrieval.start();
+                            detailsTextArea.textProperty().bind(novelDetailsRetrieval.statusProperty());
+
+                            if (novelDetailsRetrieval.novelImageProperty().get() != null) {
+                                novelImageView.imageProperty().bind(novelDetailsRetrieval.novelImageProperty());
                             } else {
-                                NOVEL_DETAILS_RETRIEVAL_SERVICE.setOnSucceeded(e -> novelImageView.imageProperty().bind(NOVEL_DETAILS_RETRIEVAL_SERVICE.novelImageProperty()));
+                                novelDetailsRetrieval.setOnSucceeded(e -> novelImageView.imageProperty().bind(novelDetailsRetrieval.novelImageProperty()));
                             }
+
                         } catch (Exception e) {
-                            LOGGER.log(Level.SEVERE, e.toString(), e);
+                            logger.log(Level.SEVERE, e.toString(), e);
                         }
                     }
-
                 }
                 );
+    }
 
+    private void getNovelsAndDetails() {
         try {
-            NOVEL_RETRIEVAL_SERVICE.start();
-            NOVEL_RETRIEVAL_SERVICE.setOnRunning(e -> {
+            novelRetrieval.start();
+            novelRetrieval.setOnRunning(e -> {
                 chapterListView.getItems().add(new Chapter("Loading Novels..."));
             });
-            novelListView.itemsProperty().bind(NOVEL_RETRIEVAL_SERVICE.valueProperty());
-            NOVEL_RETRIEVAL_SERVICE.setOnSucceeded(e -> {
+            novelRetrieval.setOnSucceeded(e -> {
+                chapterListView.getItems().clear();
                 novelListView.getSelectionModel().selectFirst();
+                novelListView.setItems(novelRetrieval.valueProperty().get());
+                novelsLabel.setText("Novels: " + novelListView.getItems().size());
+            });
+
+            novelDetailsRetrieval.setOnFailed(e -> {
+                chapterListView.getItems().clear();
+                chapterListView.getItems().add(new Chapter("Failure to retrieve chapters..."));
             });
         } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, e.toString(), e);
+            logger.log(Level.SEVERE, e.toString(), e);
         }
     }
 
+    private void novelSearchListeners() {
+        novelSearch.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> ov, String t, String t1) {
+                if (t1.isBlank()) {
+                    novelListView.setItems(novelRetrieval.valueProperty().get());
+                    return;
+                }
+                novelListView.setItems(
+                        new SortedList<>(
+                                FXCollections.observableArrayList(
+                                        novelRetrieval.valueProperty().get().stream()
+                                                .filter(novel -> novel.getTitle().toLowerCase().startsWith(t1.toLowerCase()))
+                                                .collect(Collectors.toList())
+                                )
+                        ).sorted());
+            }
+        });
+    }
 }

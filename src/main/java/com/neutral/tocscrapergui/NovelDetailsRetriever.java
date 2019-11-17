@@ -22,20 +22,19 @@ public class NovelDetailsRetriever {
     public static NovelDetails getNovelDetails(Novel novel) throws HttpStatusException {
         NovelDetails details = new NovelDetails();
         String novelURL = novel.getTitle()
-                .replace("(Completed)", "")
-                .replaceAll("[^a-zA-Z0-9 ]", "")
+                .replace("[^a-zA-Z0-9 ]", "")
                 .replace(" ", "-")
                 .toLowerCase();
-        App.LOGGER.log(Level.FINER, "Getting details for {0} with URL: {1}", new Object[]{novel.getTitle(), novelURL});
+        App.logger.log(Level.FINER, "Getting details for {0} with URL: {1}", new Object[]{novel.getTitle(), novelURL});
         Document doc;
 
         try {
             doc = Jsoup.connect(URL + novelURL).get();
         } catch (HttpStatusException e) {
-            App.LOGGER.log(Level.FINER, e.toString());
+            App.logger.log(Level.FINER, e.toString());
             throw e;
         } catch (IOException e) {
-            App.LOGGER.log(Level.FINER, e.toString(), e);
+            App.logger.log(Level.FINER, e.toString(), e);
             return details;
         }
 

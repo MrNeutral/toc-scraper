@@ -1,9 +1,9 @@
 package com.neutral.tocscrapergui.sql;
 
-import static com.neutral.tocscrapergui.App.LOGGER;
 import com.neutral.tocscrapermodels.Chapter;
 import com.neutral.tocscrapermodels.ChapterContainer;
 import com.neutral.tocscrapermodels.Novel;
+import static com.neutral.tocscrapermodels.Novel.parseStatus;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import static com.neutral.tocscrapergui.App.logger;
 
 /**
  *
@@ -21,12 +22,38 @@ import javafx.collections.ObservableList;
  */
 public class DatabaseRetriever {
 
-    private Connection conn;
-    private int novelIdIndex = 1;
-    private int novelNameIndex = 2;
-    private int chapterIdIndex = 3;
-    private int chapterNameIndex = 4;
-    private int chapterLinkIndex = 5;
+    private static Connection conn;
+    private static final int NOVEL_ID_INDEX = 1;
+    private static final int NOVEL_TITLE_INDEX = 2;
+    private static final int CHAPTER_ID_INDEX = 3;
+    private static final int CHAPTER_LINK_INDEX = 4;
+    private static final int CHAPTER_TITLE_INDEX = 5;
+    private static final int NOVEL_STATUS_INDEX = 6;
+    private static final String NOVEL_ID_TABLE = " novel_id ";
+    private static final String NOVEL_CHAPTERS_TABLE = " novel_chapters ";
+    private static final String NOVEL_STATUS_TABLE = " novel_status ";
+    private static final String ID_AT_NOVEL_ID = " novel_id._id ";
+    private static final String NAME_AT_NOVEL_ID = " novel_id.name ";
+    private static final String ID_AT_NOVEL_CHAPTERS = " novel_chapters._id ";
+    private static final String NOVEL_ID_AT_NOVEL_CHAPTERS = " novel_chapters.novel_id ";
+    private static final String TITLE_AT_NOVEL_CHAPTERS = " novel_chapters.title ";
+    private static final String LINK_AT_NOVEL_CHAPTERS = " novel_chapters.link ";
+    private static final String ID_AT_NOVEL_STATUS_TABLE = " novel_status._id ";
+    private static final String STATUS_AT_NOVEL_STATUS_TABLE = " novel_status.status ";
+    private static final String BASE_QUERY
+            = "SELECT\n"
+            + "    " + ID_AT_NOVEL_ID + "AS novel_id,\n"
+            + "    " + NAME_AT_NOVEL_ID + "AS novel_name,\n"
+            + "    " + ID_AT_NOVEL_CHAPTERS + "AS chapter_id,\n"
+            + "    " + LINK_AT_NOVEL_CHAPTERS + "AS chapter_link,\n"
+            + "    " + TITLE_AT_NOVEL_CHAPTERS + "AS chapter_title,\n"
+            + "    " + STATUS_AT_NOVEL_STATUS_TABLE + "AS novel_status\n"
+            + "FROM\n"
+            + "    " + NOVEL_ID_TABLE + "\n"
+            + "INNER JOIN" + NOVEL_CHAPTERS_TABLE + "ON" + ID_AT_NOVEL_ID + "=" + NOVEL_ID_AT_NOVEL_CHAPTERS + "\n"
+            + "INNER JOIN" + NOVEL_STATUS_TABLE + "ON" + ID_AT_NOVEL_ID + "=" + ID_AT_NOVEL_STATUS_TABLE + "\n"
+            + "ORDER BY\n"
+            + NAME_AT_NOVEL_ID;
 
     public DatabaseRetriever() {
         try {
@@ -35,12 +62,12 @@ public class DatabaseRetriever {
 //            String dbUser = db[0].split(":")[0];
 //            String dbPass = db[0].split(":")[1];
 //            String dbLink = db[1];
-            String dbUser = "Iwkn0Ill0U";
-            String dbPass = "2FVdgXV3H9";
-            String dbLink = "remotemysql.com:3306/Iwkn0Ill0U";
+            String dbUser = "WAOOiOHHaC";
+            String dbPass = "GWz5r06J31";
+            String dbLink = "remotemysql.com:3306/WAOOiOHHaC";
             conn = DriverManager.getConnection("jdbc:mysql://" + dbLink, dbUser, dbPass);
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, e.toString(), e);
+            logger.log(Level.SEVERE, e.toString(), e);
             System.exit(1);
         }
     }
@@ -48,35 +75,24 @@ public class DatabaseRetriever {
     public ObservableList<Novel> getNovels() {
         Map<String, Novel> novels = new HashMap<>();
         try (Statement statement = conn.createStatement();
-                ResultSet results = statement.executeQuery(
-                        "SELECT\n"
-                        + "    novel_id._id AS novel_id,\n"
-                        + "    novel_id.name AS novel_name,\n"
-                        + "    novel_chapters._id AS chapter_id,\n"
-                        + "    novel_chapters.title AS chapter_title,\n"
-                        + "    novel_chapters.link AS chapter_link\n"
-                        + "FROM\n"
-                        + "    novel_id\n"
-                        + "INNER JOIN novel_chapters ON novel_id._id = novel_chapters.novel_id\n"
-                        + "ORDER BY\n"
-                        + "    novel_id.name")) {
+                ResultSet results = statement.executeQuery(BASE_QUERY)) {
 
             while (results.next()) {
 
-                if (!novels.containsKey(results.getString(novelIdIndex))) {
-                    Novel novel = new Novel(results.getString(novelIdIndex), results.getString(novelNameIndex).contains("(Completed)"), results.getString(novelNameIndex), new ChapterContainer());
-                    novels.put(results.getString(novelIdIndex), novel);
-                    LOGGER.log(Level.FINEST, "{0} added", results.getString(novelNameIndex));
+                if (!novels.containsKey(results.getString(NOVEL_ID_INDEX))) {
+                    Novel novel = new Novel(results.getString(NOVEL_ID_INDEX), parseStatus(results.getString(NOVEL_STATUS_INDEX).toUpperCase()), results.getString(NOVEL_TITLE_INDEX), new ChapterContainer());
+                    novels.put(results.getString(NOVEL_ID_INDEX), novel);
+                    logger.log(Level.FINEST, "{0} added", results.getString(NOVEL_TITLE_INDEX));
                 }
 
-                Novel novel = novels.get(results.getString(novelIdIndex));
-                novel.getChapters().add(new Chapter(results.getString(chapterIdIndex), novel, results.getString(chapterNameIndex), results.getString(chapterLinkIndex)));
-                LOGGER.log(Level.FINEST, "Chapter {0}  of {1} added", new Object[]{results.getString(chapterNameIndex), novel.getTitle()});
+                Novel novel = novels.get(results.getString(NOVEL_ID_INDEX));
+                novel.getChapters().add(new Chapter(results.getString(CHAPTER_ID_INDEX), novel, results.getString(CHAPTER_TITLE_INDEX), results.getString(CHAPTER_LINK_INDEX)));
+                logger.log(Level.FINEST, "Chapter {0}  of {1} added", new Object[]{results.getString(CHAPTER_TITLE_INDEX), novel.getTitle()});
             }
 
-            LOGGER.log(Level.FINE, "DB downloaded. Novels parsed.");
+            logger.log(Level.FINE, "DB downloaded. Novels parsed.");
         } catch (SQLException e) {
-            LOGGER.log(Level.SEVERE, e.toString(), e);
+            logger.log(Level.SEVERE, e.toString(), e);
         }
 
         return FXCollections.observableArrayList(novels.values());
