@@ -85,12 +85,15 @@ public class Chapter implements Comparable<Chapter> {
 
     @Override
     public boolean equals(Object obj) {
-        if (obj == null) {
+        if (obj == null || !(obj instanceof Chapter)) {
             return false;
         }
         try {
             Chapter chapter = (Chapter) obj;
-            return novel.equals(chapter.getNovel()) && getDigits().equals(chapter.getDigits());
+            if (novel != null) {
+                return novel.equals(chapter.getNovel()) && getDigits().equals(chapter.getDigits());
+            }
+            return getDigits().equals(chapter.getDigits());
         } catch (ClassCastException e) {
             return false;
         }
@@ -99,7 +102,9 @@ public class Chapter implements Comparable<Chapter> {
     @Override
     public int hashCode() {
         int hash = 7;
-        hash = 17 * hash + Objects.hashCode(this.novel);
+        if (novel != null) {
+            hash = 17 * hash + Objects.hashCode(this.novel);
+        }
         hash = 17 * hash + Objects.hashCode(getDigits());
         return hash;
     }

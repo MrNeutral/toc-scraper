@@ -13,7 +13,7 @@ public class Novel {
     private final NovelStatus status;
     private final String title;
     private final ChapterContainer chapters;
-    
+
     public Novel(String id) {
         this.id = id;
         this.status = null;
@@ -63,13 +63,14 @@ public class Novel {
         return status;
     }
 
+    public static NovelStatus parseStatusFromTitle(String title) {
+        return (title.contains("Completed"))
+                ? NovelStatus.COMPLETED : ((title.contains("Suspend"))
+                ? NovelStatus.SUSPENDED : NovelStatus.ONGOING);
+    }
+
     public static NovelStatus parseStatus(String status) {
-        if (status.contains("Completed")) {
-            return NovelStatus.COMPLETED;
-        } else if (status.contains("Suspended")) {
-            return NovelStatus.SUSPENDED;
-        }
-        return NovelStatus.ONGOING;
+        return NovelStatus.valueOf(status.toUpperCase());
     }
 
     public static String removeExtra(String title) {
