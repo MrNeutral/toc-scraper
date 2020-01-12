@@ -3,11 +3,13 @@ package com.neutral.tocscraper;
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.neutral.tocscraper.sql.Database;
-import com.neutral.tocscrapermodels.Chapter;
-import com.neutral.tocscrapermodels.ChapterContainer;
+import com.neutral.tocscrapermodels.ChapterGroup;
+import com.neutral.tocscrapermodels.ChapterGroupBuilder;
+import com.neutral.tocscrapermodels.ChapterGroupContainer;
 import com.neutral.tocscrapermodels.Novel;
 import static com.neutral.tocscrapermodels.Novel.parseStatusFromTitle;
 import static com.neutral.tocscrapermodels.Novel.removeExtra;
+import com.neutral.tocscrapermodels.NovelBuilder;
 import com.neutral.tocscrapermodels.NovelContainer;
 import java.io.File;
 import java.io.FileWriter;
@@ -34,6 +36,8 @@ public class Scraper {
     public static final Logger LOGGER = Logger.getLogger(Scraper.class.getName());
     private final List<String> titles = new ArrayList<>();
     private final NovelContainer novels = new NovelContainer();
+    private final NovelBuilder novelBuilder = new NovelBuilder();
+    private final ChapterGroupBuilder chapterGroupBuilder = new ChapterGroupBuilder();
 
     public Scraper() throws Exception {
         FileHandler handler = new FileHandler("log.txt", false);
@@ -76,8 +80,8 @@ public class Scraper {
         try (FileWriter writer = new FileWriter(file, false)) {
             writer.write("Title, Chapter(s), Link\n");
             for (Novel novel : novels) {
-                for (Chapter chapter : novel.getChapters()) {
-                    String text = novel.getTitle() + ", " + chapter.getTitle() + ", " + chapter.getLink() + "\n";
+                for (ChapterGroup chapter : novel.getChapters()) {
+                    String text = novel.getTitle() + ", " + chapter.getStart() + ", " + chapter.getEnd() + ", " + chapter.getLink() + "\n";
                     writer.write(text);
                 }
             }
@@ -126,35 +130,54 @@ public class Scraper {
         while (iterator.hasNext()) {
             int index = iterator.nextIndex();
             List<Element> unParsedNovelLinks = iterator.next().children();
-            ChapterContainer parsedNovelLinks = new ChapterContainer();
-            Novel novel = new Novel(removeExtra(titles.get(index)), parsedNovelLinks, parseStatusFromTitle(titles.get(index)));
-            
+            ChapterGroupContainer parsedNovelLinks = new ChapterGroupContainer();
+            Novel novel = novelBuilder
+                    .setTitle(removeExtra(titles.get(index)))
+                    .setChapters(parsedNovelLinks)
+                    .setStatus(parseStatusFromTitle(titles.get(index)))
+                    .createNovel();
+
             for (Element link : unParsedNovelLinks) {
                 String linkAdress = "";
-                String chapters = link.text().trim();
+                String[] chapterRange = link.text().trim().split("-");
+                int start, end;
 
-                try {
-                    Integer.valueOf(chapters.substring(0, 3).trim());
-                } catch (NumberFormatException e) {
-                    continue;
-                }
-
+//                try {
+//                    Integer.valueOf(chapterRange[0].substring(0, 3).trim());
+//                } catch (NumberFormatException e) {
+//                    continue;
+//                }
                 if (link.tagName().equals("a")) {
                     linkAdress = link.attr("href");
                 } else {
                     missing++;
                     linkAdress = "Missing";
-                    chapters = chapters.substring(8, chapters.length());
+                    chapterRange[0] = chapterRange[0].substring(8, chapterRange[0].length());
                 }
-                LOGGER.log(Level.FINEST, "//Chapter {0} added.\n", chapters);
-                parsedNovelLinks.add(new Chapter(novel, chapters, linkAdress));
+                
+                if (chapterRange.length == 1) {
+                    start = Integer.parseInt(chapterRange[0].trim());
+                    end = start;
+                } else {
+                    start = Integer.parseInt(chapterRange[0].trim());
+                    end = Integer.parseInt(chapterRange[1].trim());
+                }
+                LOGGER.log(Level.FINEST, "//Chapter group {0} added.\n", start
+                        + (chapterRange.length > 1 ? "-" + end : ""));
+                parsedNovelLinks.add(chapterGroupBuilder
+                        .setNovel(novel)
+                        .setStart(start)
+                        .setEnd(end)
+                        .setLink(linkAdress)
+                        .createChapter());
+
             }
             LOGGER.log(Level.FINER, "//Novel {0} finished.\n", titles.get(index));
             novels.add(novel);
         }
 
         if (missing > 0) {
-            LOGGER.log(Level.INFO, "{} chapters are missing.", missing);
+            LOGGER.log(Level.INFO, "{0} chapters are missing.", missing);
         } else {
             LOGGER.log(Level.INFO, "No chapters are missing.");
         }
