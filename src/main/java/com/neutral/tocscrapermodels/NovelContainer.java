@@ -1,9 +1,9 @@
 package com.neutral.tocscrapermodels;
 
 import com.neutral.tocscrapermodels.Novel.NovelStatus;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 /**
  *
@@ -11,17 +11,17 @@ import java.util.List;
  */
 public class NovelContainer implements Iterable<Novel> {
 
-    private final List<Novel> novels;
+    private final Set<Novel> novels;
 
     public NovelContainer() {
-        this.novels = new ArrayList<>();
+        this.novels = new TreeSet<>();
     }
 
-    public NovelContainer(List<Novel> novels) {
+    public NovelContainer(Set<Novel> novels) {
         this.novels = novels;
     }
 
-    public List<Novel> asList() {
+    public Set<Novel> asList() {
         return novels;
     }
 
@@ -33,7 +33,7 @@ public class NovelContainer implements Iterable<Novel> {
         }
         return null;
     }
-    
+
     public Novel getNovelById(String id) {
         for (Novel novel : novels) {
             if (novel.getId().equals(id)) {
@@ -44,15 +44,15 @@ public class NovelContainer implements Iterable<Novel> {
     }
 
     public boolean contains(String title) {
-        return novels.stream().anyMatch((novel) -> (novel.getTitle().equals(title)));
+        return novels.stream().anyMatch(novel -> (novel.getTitle().equals(title)));
     }
-    
+
     public boolean containsId(String id) {
-        return novels.stream().anyMatch((novel) -> (novel.getId().equals(id)));
+        return novels.stream().anyMatch(novel -> (novel.getId().equals(id)));
     }
-    
+
     public boolean contains(String title, NovelStatus status) {
-        return novels.stream().anyMatch((novel) -> (novel.getTitle().equals(title) && novel.getStatus().equals(status)));
+        return novels.stream().anyMatch(novel -> (novel.getTitle().equals(title) && novel.getStatus().equals(status)));
     }
 
     public int size() {
@@ -61,6 +61,10 @@ public class NovelContainer implements Iterable<Novel> {
 
     public boolean add(Novel novel) {
         return novels.add(novel);
+    }
+
+    public void clear() {
+        novels.clear();
     }
 
     @Override
