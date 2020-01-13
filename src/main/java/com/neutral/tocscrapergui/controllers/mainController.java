@@ -4,7 +4,8 @@ import static com.neutral.tocscrapergui.App.App;
 import static com.neutral.tocscrapergui.App.logger;
 import static com.neutral.tocscrapergui.App.novelDetailsRetrieval;
 import static com.neutral.tocscrapergui.App.novelRetrieval;
-import com.neutral.tocscrapermodels.Chapter;
+import com.neutral.tocscrapermodels.ChapterGroup;
+import com.neutral.tocscrapermodels.ChapterGroupBuilder;
 import com.neutral.tocscrapermodels.Novel;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -52,7 +53,7 @@ public class mainController implements Initializable {
     private ListView<Novel> novelListView;
 
     @FXML
-    private ListView<Chapter> chapterListView;
+    private ListView<ChapterGroup> chapterListView;
 
     @FXML
     private HBox mainHBox;
@@ -95,12 +96,12 @@ public class mainController implements Initializable {
     }
 
     private void chapterListViewListeners() {
-        chapterListView.setCellFactory(new Callback<ListView<Chapter>, ListCell<Chapter>>() {
+        chapterListView.setCellFactory(new Callback<ListView<ChapterGroup>, ListCell<ChapterGroup>>() {
             @Override
-            public ListCell<Chapter> call(ListView<Chapter> p) {
-                ListCell<Chapter> chapter = new ListCell<>() {
+            public ListCell<ChapterGroup> call(ListView<ChapterGroup> p) {
+                ListCell<ChapterGroup> chapter = new ListCell<>() {
                     @Override
-                    protected void updateItem(Chapter t, boolean bln) {
+                    protected void updateItem(ChapterGroup t, boolean bln) {
                         super.updateItem(t, bln);
                         if (t == null) {
                             setText(null);
@@ -110,14 +111,22 @@ public class mainController implements Initializable {
                         if (bln) {
                             setText(null);
                         } else {
-                            setText(t.getTitle());
+                            if (t.getStart() == 0 && t.getEnd() == 0) {
+                                setText("Loading Novels...");
+                            } else if (t.getStart() == 0 && t.getEnd() == -1) {
+                                setText("Failure to retrieve Novels...");
+                            } else {
+                                setText(t.getStart() + "-" + t.getEnd());
+                            }
                         }
                     }
 
                 };
-                chapter.setOnMouseClicked(new EventHandler<MouseEvent>() {
+                chapter.setOnMouseClicked(
+                        new EventHandler<MouseEvent>() {
                     @Override
-                    public void handle(MouseEvent t) {
+                    public void handle(MouseEvent t
+                    ) {
                         if (t.getClickCount() > 1 && chapter.getItem().getLink() != null) {
                             App.getHostServices().showDocument(chapter.getItem().getLink());
 //                            try {
@@ -130,10 +139,12 @@ public class mainController implements Initializable {
 //                            }
                         }
                     }
-                });
+                }
+                );
                 return chapter;
             }
-        });
+        }
+        );
     }
 
     private void novelListViewListeners() {
@@ -145,7 +156,7 @@ public class mainController implements Initializable {
                     public void changed(ObservableValue<? extends Novel> ov, Novel t, Novel t1) {
                         chapterListView
                                 .setItems(new SortedList<>(FXCollections
-                                        .observableArrayList(t1.getChapters().asList())).sorted());
+                                        .observableArrayList(t1.getChapters().getChapters())).sorted());
 
                         try {
 
@@ -174,18 +185,20 @@ public class mainController implements Initializable {
         try {
             novelRetrieval.start();
             novelRetrieval.setOnRunning(e -> {
-                chapterListView.getItems().add(new Chapter("Loading Novels..."));
+                //temporary fix
+                chapterListView.getItems().add(new ChapterGroupBuilder().setStart(0).setEnd(0).createChapter());
             });
             novelRetrieval.setOnSucceeded(e -> {
                 chapterListView.getItems().clear();
-                novelListView.getSelectionModel().selectFirst();
                 novelListView.setItems(novelRetrieval.valueProperty().get());
+                novelListView.getSelectionModel().selectFirst();
                 novelsLabel.setText("Novels: " + novelListView.getItems().size());
             });
 
             novelDetailsRetrieval.setOnFailed(e -> {
                 chapterListView.getItems().clear();
-                chapterListView.getItems().add(new Chapter("Failure to retrieve chapters..."));
+                //temporary fix
+                chapterListView.getItems().add(new ChapterGroupBuilder().setStart(0).setEnd(-1).createChapter());
             });
         } catch (Exception e) {
             logger.log(Level.SEVERE, e.toString(), e);
