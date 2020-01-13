@@ -1,10 +1,11 @@
 package com.neutral.tocscrapermodels;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.stream.Stream;
 
 /**
  *
@@ -96,13 +97,39 @@ public class ChapterGroupContainer implements Iterable<ChapterGroup> {
         return chapters.higher(e);
     }
 
-    public boolean retainAll(Collection<?> c) {
-        return chapters.retainAll(c);
+    public boolean retainAll(ChapterGroupContainer c) {
+        return chapters.retainAll(c.getChapters());
     }
 
-    public boolean removeAll(Collection<?> c) {
-        return chapters.removeAll(c);
-    }    
-    
+    public boolean removeAll(ChapterGroupContainer c) {
+        return chapters.removeAll(c.getChapters());
+    }
+
+    public boolean addAll(ChapterGroupContainer c) {
+        return chapters.addAll(c.chapters);
+    }
+
+    public Stream<ChapterGroup> stream() {
+        return chapters.stream();
+    }
+
+    public Set<ChapterGroup> getChapters() {
+        return chapters;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return chapters.equals(o);
+    }
+
+    @Override
+    public int hashCode() {
+        return chapters.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "ChapterGroupContainer{" + "chapters=" + chapters + "}\n";
+    }
 
 }

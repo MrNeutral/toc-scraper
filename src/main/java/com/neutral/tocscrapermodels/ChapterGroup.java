@@ -36,7 +36,6 @@ public class ChapterGroup implements Comparable<ChapterGroup> {
 //        this.link = link;
 //        id = UUID.randomUUID().toString();
 //    }
-
     ChapterGroup(String id, Novel novel, int starts, int ends, String link) {
         this.id = id;
         this.novel = novel;
@@ -60,7 +59,6 @@ public class ChapterGroup implements Comparable<ChapterGroup> {
 //    public static String getDigitsAsString(String string) {
 //        return string.split("-")[0].trim();
 //    }
-
     public Novel getNovel() {
         return novel;
     }
@@ -72,7 +70,6 @@ public class ChapterGroup implements Comparable<ChapterGroup> {
 //    public String getTitle() {
 //        return title;
 //    }
-
     public String getLink() {
         return link;
     }
@@ -85,7 +82,6 @@ public class ChapterGroup implements Comparable<ChapterGroup> {
 //    public int compareTo(ChapterGroup o) {
 //        return getDigits().compareTo(o.getDigits());
 //    }
-
 //    @Override
 //    public boolean equals(Object obj) {
 //        if (obj == null || !(obj instanceof ChapterGroup)) {
@@ -110,7 +106,6 @@ public class ChapterGroup implements Comparable<ChapterGroup> {
 //        hash = 17 * hash + Objects.hashCode(getDigits());
 //        return hash;
 //    }
-
     public int getStart() {
         return start;
     }
@@ -155,7 +150,12 @@ public class ChapterGroup implements Comparable<ChapterGroup> {
 
     @Override
     public int compareTo(ChapterGroup o) {
-        return Integer.compare(end, o.end);
+        return Integer.compare(end, o.end) == 0 ? Integer.compare(start, o.start) : Integer.compare(end, o.end);
+    }
+
+    @Override
+    public String toString() {
+        return "ChapterGroup{" + "id=" + id + ", novel=" + novel + ", start=" + start + ", end=" + end + ", link=" + link + "}\n";
     }
 
 }
