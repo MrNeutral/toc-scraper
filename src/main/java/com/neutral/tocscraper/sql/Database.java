@@ -15,9 +15,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import org.apache.commons.text.StringEscapeUtils;
 
@@ -55,7 +53,6 @@ public class Database {
     private PreparedStatement insertNovelStatusStatement;
     private PreparedStatement insertChapterGroupStatement;
     private PreparedStatement deleteChapterGroupStatement;
-    private final Set<PreparedStatement> preparedStatements = new HashSet<>();
 
     private final String query
             = "SELECT\n"
@@ -122,7 +119,7 @@ public class Database {
                     + "WHERE"
                     + linkAtNovelChapterGroups
                     + "= ?");
-            preparedStatements.addAll(List.of(updateStatusStatement, updateChapterGroupLinkStatement, updateChapterGroupRangeStatement, insertNovelStatement, insertNovelStatusStatement, insertChapterGroupStatement));
+//            preparedStatements.addAll(List.of(updateStatusStatement, updateChapterGroupLinkStatement, updateChapterGroupRangeStatement, insertNovelStatement, insertNovelStatusStatement, insertChapterGroupStatement));
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -353,6 +350,9 @@ public class Database {
                                 .createNovel()
                 );
             }
+            if(results.getInt(chapterGroupEndIndex) == 634){
+                System.out.println("");
+            }
             dbNovels.getNovelByTitle(results.getString(novelTitleIndex)).getChapters()
                     .add(chapterGroupBuilder
                             .setStart(results.getInt(chapterGroupStartIndex))
@@ -434,72 +434,93 @@ public class Database {
         }
     }
 
+    public static void main(String[] args) throws SQLException {
+        new Database().checkChapterContinuity(new NovelContainer());
+    }
+
     private void checkChapterContinuity(NovelContainer dbNovels) throws SQLException {
         try (Statement statement = conn.createStatement()) {
-            ResultSet results = statement.executeQuery(query);
+            ResultSet results = statement.executeQuery("SELECT\n"
+                    + "    " + idAtNovelId + "AS novel_id,\n"
+                    + "    " + titleAtNovelId + "AS novel_title,\n"
+                    + "    " + linkAtNovelChapterGroups + "AS chapter_group_link,\n"
+                    + "    " + startAtNovelChapterGroups + "AS chapter_group_start,\n"
+                    + "    " + endAtNovelChapterGroups + "AS chapter_group_end,\n"
+                    + "    " + statusAtNovelStatusTable + "AS novel_status\n"
+                    + "FROM\n"
+                    + "    " + novelIdTable + "\n"
+                    + "INNER JOIN" + novelChapterGroupsTable + "ON" + idAtNovelId + "=" + novelIdAtNovelChapterGroups + "\n"
+                    + "INNER JOIN" + novelStatusTable + "ON" + idAtNovelId + "=" + idAtNovelStatusTable + "\n"
+                    + "WHERE novel_id = 'cab4b9e5-b922-4200-8bb5-9d5286f62d9c' "
+                    + "ORDER BY\n"
+                    + titleAtNovelId);
             populateContainer(dbNovels, results);
+//            FileWriter writer = new FileWriter("depth.txt");
 
             for (Novel novel : dbNovels) {
                 var chapterGroups = novel.getChapters();
-                List<ArrayList<ChapterGroup>> listPaths = new ArrayList<>();
-                //get chapter with biggest end
+//                List<ArrayList<ChapterGroup>> listPaths = new ArrayList<>();
+//                //get chapter with biggest end
                 var current = chapterGroups.last();
-                //check if there is there is more than one chapter with that end
-                int paths = chapterGroups.getChapterGroupsByEnd(current.getEnd()).size();
-                //for each of those chapters with the same end
-                for (int i = 0; i < paths; ++i) {
-                    ArrayList<ChapterGroup> toKeep = new ArrayList<>();
-                    //iterate backwards
-                    current = chapterGroups.getChapterGroupsByEnd(current.getEnd()).get(i);
-                    while (true) {
-                        toKeep.add(current);
-                        if (chapterGroups.getSingularChapterGroupByEnd(current.getStart() - 1) != null) {
-                            current = chapterGroups.getSingularChapterGroupByEnd(current.getStart() - 1);
-                        } else {
-                            //add chain to listPaths
-                            listPaths.add(toKeep);
-                            break;
-                        }
-                    }
-                }
-                var biggestPath = listPaths.stream().max((o1, o2) -> {
-                    return Integer.compare(o1.size(), o2.size());
-                }).get();
+//                //check if there is there is more than one chapter with that end
+//                int paths = chapterGroups.getChapterGroupsByEnd(current.getEnd()).size();
+//                //for each of those chapters with the same end
+//                for (int i = 0; i < paths; ++i) {
+//                    ArrayList<ChapterGroup> toKeep = new ArrayList<>();
+//                    //iterate backwards
+//                    current = chapterGroups.getChapterGroupsByEnd(current.getEnd()).get(i);
+//                    while (true) {
+//                        toKeep.add(current);
+//                        if (chapterGroups.getSingularChapterGroupByEnd(current.getStart() - 1) != null) {
+//                            current = chapterGroups.getSingularChapterGroupByEnd(current.getStart() - 1);
+//                        } else {
+//                            //add chain to listPaths
+//                            listPaths.add(toKeep);
+//                            break;
+//                        }
+//                    }
+//                }
+//                var biggestPath = listPaths.stream().max((o1, o2) -> {
+//                    return Integer.compare(o1.size(), o2.size());
+//                }).get();
 
-                chapterGroups.removeAll(biggestPath);
-
+//                chapterGroups.removeAll(biggestPath);
+                chapterGroups.removeAll(getLongestPath(chapterGroups, current));
                 for (ChapterGroup chapterGroup : chapterGroups) {
                     deleteChapterGroupStatement.setString(1, chapterGroup.getLink());
                     deleteChapterGroupStatement.addBatch();
                 }
-
             }
             deleteChapterGroupStatement.executeBatch();
             conn.commit();
         }
     }
 
-    private void getDeepest(ChapterGroupContainer chapterGroups, ChapterGroup current) {
-        int paths = chapterGroups.getChapterGroupsByEnd(current.getEnd()).size();
+    private ChapterGroupContainer getLongestPath(ChapterGroupContainer chapterGroups, ChapterGroup current) {
+        int paths = chapterGroups.getChapterGroupsByEnd(current.getStart() - 1).size();
         //for each of those chapters with the same end
+        List<ChapterGroupContainer> allPaths = new ArrayList<>();
         for (int i = 0; i < paths; ++i) {
-            ArrayList<ChapterGroup> toKeep = new ArrayList<>();
+            ChapterGroupContainer toKeep = new ChapterGroupContainer();
             //iterate backwards
-            current = chapterGroups.getChapterGroupsByEnd(current.getEnd()).get(i);
+            current = chapterGroups.getChapterGroupsByEnd(current.getStart() - 1).get(i);
             while (true) {
                 toKeep.add(current);
                 if (chapterGroups.getChapterGroupsByEnd(current.getStart() - 1).size() > 1) {
-                    getDeepest(chapterGroups, current);
-                }
-                if (chapterGroups.getSingularChapterGroupByEnd(current.getStart() - 1) != null) {
+                    toKeep.addAll(getLongestPath(chapterGroups, current));
+                    current = toKeep.first();
+                } else if (chapterGroups.getSingularChapterGroupByEnd(current.getStart() - 1) != null) {
                     current = chapterGroups.getSingularChapterGroupByEnd(current.getStart() - 1);
                 } else {
-                    //add chain to listPaths
-                    listPaths.add(toKeep);
+                    //add chain to allPaths
+                    allPaths.add(toKeep);
                     break;
                 }
             }
         }
+        return allPaths.stream().max((o1, o2) -> {
+            return Integer.compare(o1.size(), o2.size());
+        }).get();
     }
 
 }
