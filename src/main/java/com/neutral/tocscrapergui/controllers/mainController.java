@@ -115,6 +115,8 @@ public class mainController implements Initializable {
                                 setText("Loading Novels...");
                             } else if (t.getStart() == 0 && t.getEnd() == -1) {
                                 setText("Failure to retrieve Novels...");
+                            } else if (t.getLink().contains("Missing")) {
+                                setText(t.getLink());
                             } else {
                                 setText(t.getStart() + "-" + t.getEnd());
                             }
@@ -127,7 +129,7 @@ public class mainController implements Initializable {
                     @Override
                     public void handle(MouseEvent t
                     ) {
-                        if (t.getClickCount() > 1 && chapter.getItem().getLink() != null) {
+                        if (t.getClickCount() > 1 && (chapter.getItem().getLink() != null || !chapter.getItem().getLink().contains("Missing"))) {
                             App.getHostServices().showDocument(chapter.getItem().getLink());
 //                            try {
 //                                Stage stage = new Stage();
@@ -154,6 +156,9 @@ public class mainController implements Initializable {
                 .selectedItemProperty().addListener(new ChangeListener<Novel>() {
                     @Override
                     public void changed(ObservableValue<? extends Novel> ov, Novel t, Novel t1) {
+                        if(t1 == null) {
+                            return;
+                        }
                         chapterListView
                                 .setItems(new SortedList<>(FXCollections
                                         .observableArrayList(t1.getChapters().getChapters())).sorted());
