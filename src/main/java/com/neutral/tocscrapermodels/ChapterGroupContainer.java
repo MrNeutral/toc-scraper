@@ -19,6 +19,10 @@ public class ChapterGroupContainer implements Iterable<ChapterGroup> {
         this.chapters = new TreeSet<>();
     }
 
+    public ChapterGroupContainer(ChapterGroup... chapterGroups) {
+        this.chapters = new TreeSet<>(List.of(chapterGroups));
+    }
+
     public ChapterGroupContainer(TreeSet<ChapterGroup> chapters) {
         this.chapters = chapters;
     }
