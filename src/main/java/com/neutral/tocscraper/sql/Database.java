@@ -119,7 +119,6 @@ public class Database {
                     + "WHERE"
                     + linkAtNovelChapterGroups
                     + "= ?");
-//            preparedStatements.addAll(List.of(updateStatusStatement, updateChapterGroupLinkStatement, updateChapterGroupRangeStatement, insertNovelStatement, insertNovelStatusStatement, insertChapterGroupStatement));
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -160,178 +159,6 @@ public class Database {
             dbNovels.clear();
             novelsInMemory.clear();
             checkChapterContinuity(dbNovels);
-
-//            List<DBRow> rows = new ArrayList<>();
-//
-//            //Create a DBRow entity for every DB row
-//            while (results.next()) {
-//                rows.add(new DBRow(results.getString(1),
-//                        results.getString(2),
-//                        results.getString(3), results.getString(4),
-//                        Novel.parseStatus(results.getString(5)))
-//                );
-//            }
-//
-//            if (!results.isClosed()) {
-//                results.close();
-//            }
-//            conn.setAutoCommit(false);
-//
-//            NovelContainer novelsToBeUpdated = new NovelContainer();
-//            ChapterGroupContainer chaptersToBeUpdated = new ChapterGroupContainer();
-//
-//            //Iterate through every row in the DB
-//            for (var row : rows) {
-//                //If the scraped novel is an exact match to the db novel
-//                if (novelsInMemory.contains(row.getNovelTitle(), row.getNovelStatus())) {
-//                    Scraper.LOGGER.log(Level.FINEST, "{0} is already in the DB.", row.getNovelTitle());
-//                } //If the scraped novel is a completed version of the db novel
-//                else if (novelsInMemory.contains(row.getNovelTitle(), Novel.NovelStatus.COMPLETED)
-//                        && !novelsToBeUpdated.contains(row.getNovelTitle())) {
-//                    statement.addBatch("UPDATE novel_status SET status = '"
-//                            + Novel.NovelStatus.COMPLETED
-//                            + "' WHERE _id ='"
-//                            + row.getNovelId() + "'");
-//                    novelsToBeUpdated.add(novelsInMemory.getNovelByTitle(row.getNovelTitle()));
-//                    Scraper.LOGGER.log(Level.FINEST, "{0}: Novel completed, updated status.", row.getNovelTitle());
-//                } //If the scraped novel is a suspended version of the db novel
-//                else if (novelsInMemory.contains(row.getNovelTitle(), Novel.NovelStatus.SUSPENDED)
-//                        && !novelsToBeUpdated.contains(row.getNovelTitle())) {
-//                    statement.addBatch("UPDATE novel_status SET status = '"
-//                            + Novel.NovelStatus.SUSPENDED
-//                            + "' WHERE _id ='"
-//                            + row.getNovelId() + "'");
-//                    novelsToBeUpdated.add(novelsInMemory.getNovelByTitle(row.getNovelTitle()));
-//                    Scraper.LOGGER.log(Level.FINEST, "{0}: Novel suspended, updated status.", row.getNovelTitle());
-//                } //If the scraped novel is an unsuspended/available version of the db novel
-//                else if (novelsInMemory.contains(row.getNovelTitle(), Novel.NovelStatus.ONGOING)
-//                        && !novelsToBeUpdated.contains(row.getNovelTitle())) {
-//                    statement.addBatch("UPDATE novel_status SET status = '"
-//                            + Novel.NovelStatus.ONGOING
-//                            + "' WHERE _id ='"
-//                            + row.getNovelId() + "'");
-//                    novelsToBeUpdated.add(novelsInMemory.getNovelByTitle(row.getNovelTitle()));
-//                    Scraper.LOGGER.log(Level.FINEST, "{0}: Novel unsuspended/available, updated status.", row.getNovelTitle());
-//                } //If there is no equivalent scraped novel for a db novel and the db novel isn't finished
-//                else if (!novelsInMemory.contains(row.getNovelTitle()) && !novelsToBeUpdated.contains(row.getNovelTitle()) && !row.getNovelStatus().equals(Novel.NovelStatus.COMPLETED)) {
-//                    statement.addBatch("UPDATE novel_status SET status = '"
-//                            + Novel.NovelStatus.UNAVAILABLE
-//                            + "' WHERE _id ='"
-//                            + row.getNovelId() + "'");
-//                    novelsToBeUpdated.add(new Novel(row.getNovelTitle(), Novel.NovelStatus.UNAVAILABLE));
-//                    Scraper.LOGGER.log(Level.FINEST, "{0}: Novel not available, updated status.", row.getNovelTitle());
-//                    continue;
-//                } //If there is no equivalent db novel for a scraped novel
-//                else {
-//                    continue;
-//                }
-//
-//                //Get all scraped chapters of the novel with the current title, ignoring completion status
-//                ChapterGroupContainer chaptersInMemory = novelsInMemory.getNovelByTitle(row.getNovelTitle()).getChapters();
-//                //If scraped chapters of this novel contain this specific chapter
-//                if (chaptersInMemory.contains(row.getChapterTitle())) {
-//                    //If the scraped chapter link is the same as the DB link
-//                    if (chaptersInMemory.getChapterGroupByRange(row.getChapterTitle()).getLink().equals(row.getChapterLink())) {
-//                        Scraper.LOGGER.log(Level.FINEST, "{0}: {1} is already in the DB.", new Object[]{row.getNovelTitle(), row.getChapterTitle()});
-//                    } //If the title is the same but the link is different
-//                    else if (!chaptersToBeUpdated.containsLink(chaptersInMemory.getChapterGroupByRange(row.getChapterTitle()).getLink())) {
-//                        statement.addBatch("UPDATE novel_chapter_groups SET link = '"
-//                                + chaptersInMemory.getChapterGroupByRange(row.getChapterTitle()).getLink() + "'"
-//                                + "WHERE link = '"
-//                                + row.getChapterLink() + "'");
-//                        chaptersToBeUpdated.add(chaptersInMemory.getChapterGroupByRange(row.getChapterTitle()));
-//                        Scraper.LOGGER.log(Level.FINEST, "{0}: {1} The link was queued to be updated.", new Object[]{row.getNovelTitle(), row.getChapterTitle()});
-//                    }
-//                } //If the digits are the same as the scraped chapter but the link is different
-//                else if (chaptersInMemory.contains(getDigits(row.getChapterTitle()))
-//                        && !chaptersToBeUpdated.containsLink(chaptersInMemory.getChapterByDigits(getDigits(row.getChapterTitle())).getLink())) {
-//                    Chapter chapter = chaptersInMemory.
-//                            getChapterByDigits(getDigits(row.getChapterTitle()));
-//                    statement.addBatch("UPDATE novel_chapter_groups SET link = '"
-//                            + chapter.getLink() + "', "
-//                            + "title = '"
-//                            + chapter.getTitle()
-//                            + "' WHERE novel_id = '"
-//                            + row.getNovelId() + "' AND "
-//                            + "title = '"
-//                            + row.getChapterTitle() + "'");
-//                    chaptersInMemory.getChapterGroupByRange(getDigitsAsString(row.getChapterTitle()));
-//                    Scraper.LOGGER.log(Level.FINEST, "{0}: {1} ({2}) The link was queued to be updated.", new Object[]{row.getNovelTitle(), chapter.getTitle(), chapter.getLink()});
-//
-//                }
-//            }
-//
-//            statement.executeBatch();
-//            conn.commit();
-//
-//            results = statement.executeQuery(query);
-//
-//            rows.clear();
-//
-//            while (results.next()) {
-//                rows.add(new DBRow(results.getString(1),
-//                        results.getString(2),
-//                        results.getString(3), results.getString(4),
-//                        Novel.parseStatus(results.getString(5)))
-//                );
-//            }
-//
-//            if (!results.isClosed()) {
-//                results.close();
-//            }
-//
-//            NovelContainer dbNovels = new NovelContainer();
-//            rows.stream()
-//                    .distinct()
-//                    .forEach(row -> dbNovels.add(new Novel(row.getNovelId(), row.getNovelStatus(), row.getNovelTitle(), new ChapterGroupContainer())));
-//            rows.stream()
-//                    .forEach(row -> dbNovels.getNovelByTitle(row.getNovelTitle()).getChapters().add(new Chapter(dbNovels.getNovelByTitle(row.getNovelTitle()), row.getChapterTitle(), row.getChapterLink())));
-//
-//            for (Novel novel : novelsInMemory) {
-//                //If database doesn't contain a novel with this title, insert it
-//                if (!dbNovels.contains(novel.getTitle())) {
-//                    statement.addBatch("INSERT INTO"
-//                            + novelIdTable
-//                            + "VALUES ('"
-//                            + novel.getId() + "', '"
-//                            + StringEscapeUtils.escapeEcmaScript(novel.getTitle()) + "')");
-//                    statement.addBatch("INSERT INTO"
-//                            + novelStatusTable
-//                            + "VALUES('"
-//                            + novel.getId()
-//                            + "', '"
-//                            + novel.getStatus() + "')");
-//                    Scraper.LOGGER.log(Level.FINEST, "{0} added to the queue.", novel.getTitle());
-//                }
-//
-//                for (Chapter chapter : novel.getChapters()) {
-//                    if (dbNovels.getNovelByTitle(novel.getTitle()) == null) {
-//                        statement.addBatch("INSERT INTO"
-//                                + novelChaptersTable
-//                                + "VALUES ('"
-//                                + chapter.getId() + "','"
-//                                + novel.getId() + "','"
-//                                + chapter.getTitle() + "','"
-//                                + chapter.getLink() + "')"
-//                        );
-//                        Scraper.LOGGER.log(Level.FINEST, "{0}: {1} ({2}) The link was added to the queue.", new Object[]{novel.getTitle(), chapter.getTitle(), chapter.getLink()});
-//                    } else if (!dbNovels.getNovelByTitle(novel.getTitle()).getChapters().containsLink(chapter.getLink())) {
-//                        statement.addBatch("INSERT INTO"
-//                                + novelChaptersTable
-//                                + "VALUES ('"
-//                                + chapter.getId() + "','"
-//                                + dbNovels.getNovelByTitle(novel.getTitle()).getId() + "','"
-//                                + chapter.getTitle() + "','"
-//                                + chapter.getLink() + "')"
-//                        );
-//                        Scraper.LOGGER.log(Level.FINEST, "{0}: {1} ({2}) The link was added to the queue.", new Object[]{novel.getTitle(), chapter.getTitle(), chapter.getLink()});
-//
-//                    }
-//                }
-//            }
-//            statement.executeBatch();
-//            conn.commit();
-//            conn.setAutoCommit(true);
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -349,9 +176,6 @@ public class Database {
                                 .setStatus(Novel.NovelStatus.from(results.getString(novelStatusIndex)))
                                 .createNovel()
                 );
-            }
-            if(results.getInt(chapterGroupEndIndex) == 634){
-                System.out.println("");
             }
             dbNovels.getNovelByTitle(results.getString(novelTitleIndex)).getChapters()
                     .add(chapterGroupBuilder
@@ -378,9 +202,6 @@ public class Database {
         }
         var dbChapters = dbNovel.getChapters();
         for (ChapterGroup chapterGroup : novel.getChapters()) {
-            if (chapterGroup.getLink().contains("https://priv.atebin.com/?03405ccf2b07b7d3#oMj/LXrPqoRMijxTQi5d34")) {
-                System.out.println("");
-            }
             //if chapter group with same range exists
             if (dbChapters.contains(chapterGroup.getStart(), chapterGroup.getEnd())) {
                 //if the link is the same
@@ -434,10 +255,6 @@ public class Database {
         }
     }
 
-    public static void main(String[] args) throws SQLException {
-        new Database().checkChapterContinuity(new NovelContainer());
-    }
-
     private void checkChapterContinuity(NovelContainer dbNovels) throws SQLException {
         try (Statement statement = conn.createStatement()) {
             ResultSet results = statement.executeQuery("SELECT\n"
@@ -451,41 +268,15 @@ public class Database {
                     + "    " + novelIdTable + "\n"
                     + "INNER JOIN" + novelChapterGroupsTable + "ON" + idAtNovelId + "=" + novelIdAtNovelChapterGroups + "\n"
                     + "INNER JOIN" + novelStatusTable + "ON" + idAtNovelId + "=" + idAtNovelStatusTable + "\n"
-                    + "WHERE novel_id = 'cab4b9e5-b922-4200-8bb5-9d5286f62d9c' "
                     + "ORDER BY\n"
                     + titleAtNovelId);
             populateContainer(dbNovels, results);
-//            FileWriter writer = new FileWriter("depth.txt");
 
             for (Novel novel : dbNovels) {
                 var chapterGroups = novel.getChapters();
-//                List<ArrayList<ChapterGroup>> listPaths = new ArrayList<>();
-//                //get chapter with biggest end
                 var current = chapterGroups.last();
-//                //check if there is there is more than one chapter with that end
-//                int paths = chapterGroups.getChapterGroupsByEnd(current.getEnd()).size();
-//                //for each of those chapters with the same end
-//                for (int i = 0; i < paths; ++i) {
-//                    ArrayList<ChapterGroup> toKeep = new ArrayList<>();
-//                    //iterate backwards
-//                    current = chapterGroups.getChapterGroupsByEnd(current.getEnd()).get(i);
-//                    while (true) {
-//                        toKeep.add(current);
-//                        if (chapterGroups.getSingularChapterGroupByEnd(current.getStart() - 1) != null) {
-//                            current = chapterGroups.getSingularChapterGroupByEnd(current.getStart() - 1);
-//                        } else {
-//                            //add chain to listPaths
-//                            listPaths.add(toKeep);
-//                            break;
-//                        }
-//                    }
-//                }
-//                var biggestPath = listPaths.stream().max((o1, o2) -> {
-//                    return Integer.compare(o1.size(), o2.size());
-//                }).get();
-
-//                chapterGroups.removeAll(biggestPath);
                 chapterGroups.removeAll(getLongestPath(chapterGroups, current));
+                Scraper.LOGGER.log(Level.FINEST, "Cleaned chapters for {0}.", novel.getTitle());
                 for (ChapterGroup chapterGroup : chapterGroups) {
                     deleteChapterGroupStatement.setString(1, chapterGroup.getLink());
                     deleteChapterGroupStatement.addBatch();
@@ -497,11 +288,29 @@ public class Database {
     }
 
     private ChapterGroupContainer getLongestPath(ChapterGroupContainer chapterGroups, ChapterGroup current) {
+        if (chapterGroups.size() == 1) {
+            return new ChapterGroupContainer(current);
+        }
         int paths = chapterGroups.getChapterGroupsByEnd(current.getStart() - 1).size();
+        if (paths == 0) {
+            current = chapterGroups.lower(current);
+            paths = chapterGroups.getChapterGroupsByEnd(current.getStart() - 1).size();
+        }
         //for each of those chapters with the same end
         List<ChapterGroupContainer> allPaths = new ArrayList<>();
+        var root = current;
+
         for (int i = 0; i < paths; ++i) {
+            current = root;
             ChapterGroupContainer toKeep = new ChapterGroupContainer();
+            if (current == chapterGroups.last()
+                    || (current == chapterGroups.lower(chapterGroups.last())
+                    && chapterGroups.getChapterGroupsByEnd(chapterGroups.last().getEnd()).isEmpty())) {
+                toKeep.add(current);
+            }
+            if (current.getStart() == current.getEnd()) {
+                toKeep.add(current);
+            }
             //iterate backwards
             current = chapterGroups.getChapterGroupsByEnd(current.getStart() - 1).get(i);
             while (true) {

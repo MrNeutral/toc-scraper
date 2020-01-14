@@ -151,10 +151,14 @@ public class Scraper {
                     linkAdress = link.attr("href");
                 } else {
                     missing++;
-                    linkAdress = "Missing";
                     chapterRange[0] = chapterRange[0].substring(8, chapterRange[0].length());
+                    if (chapterRange.length > 1) {
+                        linkAdress = "Missing: " + chapterRange[0].trim() + "-" + chapterRange[1].trim();
+                    } else {
+                        linkAdress = "Missing: " + chapterRange[0].trim();
+                    }
                 }
-                
+
                 if (chapterRange.length == 1) {
                     start = Integer.parseInt(chapterRange[0].trim());
                     end = start;
