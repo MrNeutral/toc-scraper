@@ -140,6 +140,10 @@ public class Scraper {
             for (Element link : unParsedNovelLinks) {
                 String linkAdress = "";
                 String[] chapterRange = link.text().trim().split("-");
+                if (chapterRange.length > 2) {
+                    //stop being retarded ToC, negative chapters are insane
+                    continue;
+                }
                 int start, end;
 
 //                try {
