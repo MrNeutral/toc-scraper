@@ -81,7 +81,7 @@ public class Scraper {
             writer.write("Title, Chapter(s), Link\n");
             for (Novel novel : novels) {
                 for (ChapterGroup chapter : novel.getChapters()) {
-                    String text = novel.getTitle() + ", " + chapter.getStart() + ", " + chapter.getEnd() + ", " + chapter.getLink() + "\n";
+                    String text = novel.getTitle() + ", " + chapter.getStart() + "-" + chapter.getEnd() + ", " + chapter.getLink() + "\n";
                     writer.write(text);
                 }
             }

@@ -17,7 +17,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
-import org.apache.commons.text.StringEscapeUtils;
 
 /**
  *
@@ -145,7 +144,7 @@ public class Database {
                     }
                 } else {
                     insertNovelStatement.setString(1, novel.getId());
-                    insertNovelStatement.setString(2, StringEscapeUtils.escapeEcmaScript(novel.getTitle()));
+                    insertNovelStatement.setString(2, novel.getTitle());
                     insertNovelStatement.addBatch();
 
                     insertNovelStatusStatement.setString(1, novel.getId());
@@ -248,6 +247,7 @@ public class Database {
             updateStatusStatement.executeBatch();
             updateChapterGroupLinkStatement.executeBatch();
             updateChapterGroupRangeStatement.executeBatch();
+            conn.commit();
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
@@ -292,9 +292,15 @@ public class Database {
             return new ChapterGroupContainer(current);
         }
         int paths = chapterGroups.getChapterGroupsByEnd(current.getStart() - 1).size();
-        if (paths == 0) {
-            current = chapterGroups.lower(current);
-            paths = chapterGroups.getChapterGroupsByEnd(current.getStart() - 1).size();
+        while (paths == 0) {
+            if (current == chapterGroups.last()) {
+                current = chapterGroups.lower(current);
+                paths = chapterGroups.getChapterGroupsByEnd(current.getStart() - 1).size();
+            } else if (current == chapterGroups.lower(chapterGroups.last()) && chapterGroups.size() == 2) {
+                return new ChapterGroupContainer(current);
+            } else {
+                break;
+            }
         }
         //for each of those chapters with the same end
         List<ChapterGroupContainer> allPaths = new ArrayList<>();
@@ -305,7 +311,7 @@ public class Database {
             ChapterGroupContainer toKeep = new ChapterGroupContainer();
             if (current == chapterGroups.last()
                     || (current == chapterGroups.lower(chapterGroups.last())
-                    && chapterGroups.getChapterGroupsByEnd(chapterGroups.last().getEnd()).isEmpty())) {
+                    && chapterGroups.getChapterGroupsByEnd(chapterGroups.last().getEnd()).size() > 1)) {
                 toKeep.add(current);
             }
             if (current.getStart() == current.getEnd()) {
