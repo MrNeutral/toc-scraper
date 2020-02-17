@@ -22,9 +22,9 @@ public class App extends Application {
 
     private static Scene scene;
     public static App App = null;
-    public static final Logger logger = Logger.getLogger(App.class.getName());
+    public static final Logger LOGGER = Logger.getLogger(App.class.getName());
     private static final NovelContainer novels = new NovelContainer();
-    private static final DatabaseRetriever db = new DatabaseRetriever();
+    private static final DatabaseRetriever DB = new DatabaseRetriever();
     public static final NovelRetrievalService novelRetrieval = new NovelRetrievalService();
     public static final NovelDetailsRetrievalService novelDetailsRetrieval = new NovelDetailsRetrievalService();
 
@@ -33,7 +33,7 @@ public class App extends Application {
     }
 
     public static DatabaseRetriever getDB() {
-        return db;
+        return DB;
     }
 
     @Override
@@ -61,12 +61,13 @@ public class App extends Application {
         try {
             FileHandler handler = new FileHandler("log.txt", false);
             handler.setLevel(Level.ALL);
-            logger.setLevel(Level.ALL);
+            LOGGER.setLevel(Level.ALL);
             handler.setFormatter(new SimpleFormatter());
-            logger.addHandler(handler);
-            logger.log(Level.FINE, "Logger Initiated");
+            LOGGER.addHandler(handler);
+            LOGGER.log(Level.FINE, "Logger Initiated");
+
         } catch (IOException e) {
-            logger.log(Level.SEVERE, e.toString(), e);
+            LOGGER.log(Level.SEVERE, e.toString(), e);
         }
 
         launch();

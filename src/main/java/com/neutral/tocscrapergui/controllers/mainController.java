@@ -1,12 +1,13 @@
 package com.neutral.tocscrapergui.controllers;
 
+import com.neutral.tocscrapergui.App;
 import static com.neutral.tocscrapergui.App.App;
-import static com.neutral.tocscrapergui.App.logger;
 import static com.neutral.tocscrapergui.App.novelDetailsRetrieval;
 import static com.neutral.tocscrapergui.App.novelRetrieval;
 import com.neutral.tocscrapermodels.ChapterGroup;
 import com.neutral.tocscrapermodels.ChapterGroupBuilder;
 import com.neutral.tocscrapermodels.Novel;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -18,8 +19,11 @@ import javafx.collections.transformation.SortedList;
 import javafx.concurrent.Service;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Cursor;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -31,7 +35,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.stage.Stage;
 import javafx.util.Callback;
+import static com.neutral.tocscrapergui.App.LOGGER;
 
 /**
  * FXML Controller class
@@ -130,15 +136,19 @@ public class mainController implements Initializable {
                     public void handle(MouseEvent t
                     ) {
                         if (t.getClickCount() > 1 && (chapter.getItem().getLink() != null || !chapter.getItem().getLink().contains("Missing"))) {
-                            App.getHostServices().showDocument(chapter.getItem().getLink());
-//                            try {
-//                                Stage stage = new Stage();
-//                                var scene = new Scene(new FXMLLoader(App.class.getResource("/fxml/" + "webView" + ".fxml")).load());
-//                                stage.setScene(scene);
-//                                stage.show();
-//                            } catch (IOException e) {
-//
-//                            }
+//                            App.getHostServices().showDocument(chapter.getItem().getLink());
+                            try {
+                                Stage stage = new Stage();
+                                FXMLLoader loader = new FXMLLoader(App.class.getResource("/fxml/" + "chapter" + ".fxml"));
+                                Scene scene = new Scene(loader.<Parent>load());
+                                stage.setScene(scene);
+                                loader.<chapterController>getController().setLink(chapter.getItem().getLink());
+                                loader.<chapterController>getController().getChapter();
+                                stage.show();
+                            } catch (IOException e) {
+                                System.out.println(e + e.getMessage());
+                                e.printStackTrace();
+                            }
                         }
                     }
                 }
@@ -156,7 +166,7 @@ public class mainController implements Initializable {
                 .selectedItemProperty().addListener(new ChangeListener<Novel>() {
                     @Override
                     public void changed(ObservableValue<? extends Novel> ov, Novel t, Novel t1) {
-                        if(t1 == null) {
+                        if (t1 == null) {
                             return;
                         }
                         chapterListView
@@ -179,7 +189,7 @@ public class mainController implements Initializable {
                             }
 
                         } catch (Exception e) {
-                            logger.log(Level.SEVERE, e.toString(), e);
+                            LOGGER.log(Level.SEVERE, e.toString(), e);
                         }
                     }
                 }
@@ -206,7 +216,7 @@ public class mainController implements Initializable {
                 chapterListView.getItems().add(new ChapterGroupBuilder().setStart(0).setEnd(-1).createChapter());
             });
         } catch (Exception e) {
-            logger.log(Level.SEVERE, e.toString(), e);
+            LOGGER.log(Level.SEVERE, e.toString(), e);
         }
     }
 

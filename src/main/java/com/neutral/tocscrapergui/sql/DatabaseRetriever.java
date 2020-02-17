@@ -1,6 +1,5 @@
 package com.neutral.tocscrapergui.sql;
 
-import static com.neutral.tocscrapergui.App.logger;
 import com.neutral.tocscrapermodels.ChapterGroupBuilder;
 import com.neutral.tocscrapermodels.Novel;
 import com.neutral.tocscrapermodels.NovelBuilder;
@@ -13,6 +12,7 @@ import java.sql.Statement;
 import java.util.logging.Level;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import static com.neutral.tocscrapergui.App.LOGGER;
 
 /**
  *
@@ -67,9 +67,9 @@ public class DatabaseRetriever {
             String dbPass = "GWz5r06J31";
             String dbLink = "remotemysql.com:3306/WAOOiOHHaC";
             conn = DriverManager.getConnection("jdbc:mysql://" + dbLink + "?rewriteBatchedStatements=true", dbUser, dbPass);
-            logger.log(Level.FINER, "Connection to DB established");
+            LOGGER.log(Level.FINER, "Connection to DB established");
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, e.toString(), e);
+            LOGGER.log(Level.SEVERE, e.toString(), e);
             System.exit(1);
         }
     }
@@ -80,7 +80,7 @@ public class DatabaseRetriever {
             ResultSet results = statement.executeQuery(query);
             populateContainer(dbNovels, results);
         } catch (SQLException e) {
-            logger.log(Level.SEVERE, e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, e.getMessage(), e);
             System.exit(1);
         }
 
@@ -97,7 +97,7 @@ public class DatabaseRetriever {
                                 .setStatus(Novel.NovelStatus.from(results.getString(novelStatusIndex)))
                                 .createNovel()
                 );
-                logger.log(Level.FINEST, "{0}: Retrieved", results.getString(novelTitleIndex));
+                LOGGER.log(Level.FINEST, "{0}: Retrieved", results.getString(novelTitleIndex));
             }
             dbNovels.getNovelByTitle(results.getString(novelTitleIndex)).getChapters()
                     .add(chapterGroupBuilder

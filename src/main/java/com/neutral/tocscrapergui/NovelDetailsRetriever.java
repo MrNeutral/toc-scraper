@@ -25,16 +25,16 @@ public class NovelDetailsRetriever {
                 .replace("[^a-zA-Z0-9 ]", "")
                 .replace(" ", "-")
                 .toLowerCase();
-        App.logger.log(Level.FINER, "Getting details for {0} with URL: {1}", new Object[]{novel.getTitle(), novelURL});
+        App.LOGGER.log(Level.FINER, "Getting details for {0} with URL: {1}", new Object[]{novel.getTitle(), novelURL});
         Document doc;
 
         try {
             doc = Jsoup.connect(URL + novelURL).get();
         } catch (HttpStatusException e) {
-            App.logger.log(Level.FINER, e.toString());
+            App.LOGGER.log(Level.FINER, e.toString());
             throw e;
         } catch (IOException e) {
-            App.logger.log(Level.FINER, e.toString(), e);
+            App.LOGGER.log(Level.FINER, e.toString(), e);
             return details;
         }
 

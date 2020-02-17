@@ -76,14 +76,14 @@ public class NovelDetailsRetrievalService extends Service<NovelDetails> {
             @Override
             protected NovelDetails call() {
                 if (novel == null) {
-                    App.logger.log(Level.SEVERE, "No valid novel.");
+                    App.LOGGER.log(Level.SEVERE, "No valid novel.");
                     failed();
                 }
                 NovelDetails details = null;
                 try {
                     details = NovelDetailsRetriever.getNovelDetails(novel);
                 } catch (HttpStatusException e) {
-                    App.logger.log(Level.FINER, e.toString());
+                    App.LOGGER.log(Level.FINER, e.toString());
                     failed();
                 }
                 return details;
