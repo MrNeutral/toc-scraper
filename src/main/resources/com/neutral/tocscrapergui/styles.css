@@ -24,3 +24,18 @@
 .text-area .content {
     -fx-cursor: DEFAULT ;
 }
+
+body {
+	margin: 0px;
+}
+
+.well {
+	margin: 0px;
+	font-family: 'Merriweather', sans-serif;
+	color: #83848f;
+	font-size: 18px;
+	line-height: 1.8;
+	padding: 1px 6% 30px;
+	border-color: #3c3e47;
+	background-color: #1f2129;
+}

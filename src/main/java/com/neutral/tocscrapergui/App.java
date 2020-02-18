@@ -1,5 +1,6 @@
 package com.neutral.tocscrapergui;
 
+import com.neutral.tocscrapergui.services.ChapterRetrievalService;
 import com.neutral.tocscrapergui.services.NovelDetailsRetrievalService;
 import com.neutral.tocscrapergui.services.NovelRetrievalService;
 import com.neutral.tocscrapergui.sql.DatabaseRetriever;
@@ -27,6 +28,7 @@ public class App extends Application {
     private static final DatabaseRetriever DB = new DatabaseRetriever();
     public static final NovelRetrievalService novelRetrieval = new NovelRetrievalService();
     public static final NovelDetailsRetrievalService novelDetailsRetrieval = new NovelDetailsRetrievalService();
+    public static final ChapterRetrievalService chapterRetrieval = new ChapterRetrievalService();
 
     public App() {
         App = this;

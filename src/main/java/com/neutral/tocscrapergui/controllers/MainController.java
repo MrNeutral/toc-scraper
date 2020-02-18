@@ -44,7 +44,7 @@ import static com.neutral.tocscrapergui.App.LOGGER;
  *
  * @author Mr.Neutral
  */
-public class mainController implements Initializable {
+public class MainController implements Initializable {
 
     @FXML
     private BorderPane borderPane;
@@ -142,8 +142,8 @@ public class mainController implements Initializable {
                                 FXMLLoader loader = new FXMLLoader(App.class.getResource("/fxml/" + "chapter" + ".fxml"));
                                 Scene scene = new Scene(loader.<Parent>load());
                                 stage.setScene(scene);
-                                loader.<chapterController>getController().setLink(chapter.getItem().getLink());
-                                loader.<chapterController>getController().getChapter();
+                                loader.<ChapterController>getController().setLink(chapter.getItem().getLink());
+                                loader.<ChapterController>getController().getChapter();
                                 stage.show();
                             } catch (IOException e) {
                                 System.out.println(e + e.getMessage());

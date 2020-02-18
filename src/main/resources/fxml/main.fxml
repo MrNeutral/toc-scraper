@@ -19,7 +19,7 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-<BorderPane fx:id="borderPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="720.0" minWidth="1280.0" stylesheets="@../com/neutral/tocscrapergui/styles.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.neutral.tocscrapergui.controllers.mainController">
+<BorderPane fx:id="borderPane" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="720.0" minWidth="1280.0" stylesheets="@../com/neutral/tocscrapergui/styles.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.neutral.tocscrapergui.controllers.MainController">
    <center>
       <HBox fx:id="mainHBox" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0">
          <children>
@@ -37,7 +37,7 @@
                         </Label>
                         <TextField fx:id="novelSearch" focusTraversable="false" prefWidth="149.0">
                            <HBox.margin>
-                              <Insets />
+                              <Insets bottom="3.0" left="3.0" right="3.0" top="3.0" />
                            </HBox.margin>
                         </TextField>
                      </children>
