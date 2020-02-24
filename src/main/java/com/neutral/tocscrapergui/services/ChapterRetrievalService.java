@@ -2,8 +2,6 @@ package com.neutral.tocscrapergui.services;
 
 import io.github.bonigarcia.wdm.DriverManagerType;
 import io.github.bonigarcia.wdm.WebDriverManager;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 import org.jsoup.Jsoup;
@@ -24,16 +22,15 @@ public class ChapterRetrievalService extends Service<String> {
     private String link;
     private ChapterRetrievalService service = this;
     private DriverManagerType driverManagerType = DriverManagerType.FIREFOX;
-    private final StringProperty statusProperty = new SimpleStringProperty();
     //make it require a restart as the driver isn't checked when init-ing
     private boolean quitOnFinish = true;
 
-    public StringProperty statusProperty() {
-        return statusProperty;
-    }
-
     public void setQuitOnFinish(boolean quitOnFinish) {
         this.quitOnFinish = quitOnFinish;
+    }
+
+    public boolean isQuitOnFinish() {
+        return quitOnFinish;
     }
 
     public void setLink(String link) {
@@ -41,13 +38,8 @@ public class ChapterRetrievalService extends Service<String> {
     }
 
     @Override
-    protected void running() {
-        statusProperty.set("");
-    }
-
-    @Override
     protected void succeeded() {
-        statusProperty.set(service.valueProperty().get());
+        reset();
     }
 
     @Override
@@ -61,53 +53,61 @@ public class ChapterRetrievalService extends Service<String> {
     }
 
     @Override
+    public void reset() {
+        if (quitOnFinish) {
+            client.quit();
+        }
+        super.reset();
+    }
+
+    @Override
     protected void failed() {
         reset();
-        statusProperty.set("Page took too long to load...");
     }
 
     @Override
     protected Task<String> createTask() {
-        try {
-            initDriver();
-        } catch (NullPointerException e) {
-            return new Task<>() {
-                @Override
-                protected String call() throws Exception {
-                    return e.getMessage();
-                }
-            };
-        }
         return new Task<>() {
             @Override
-            protected String call() throws Exception {
-                statusProperty.set("Starting browser...");
-                client.get(link);
+            protected String call() {
                 try {
-                    statusProperty.set("Waiting for page to load...");
-                    int count = 0;
-                    while (client.getPageSource().split("role=\"document\"")[0].contains("loading")) {
-                        Thread.sleep(250);
-                        count++;
-                        if (count > 20) {
-                            failed();
+                    updateMessage("Starting browser...");
+                    initDriver();
+                    client.get(link);
+                    try {
+                        updateMessage("Waiting for page to load...");
+                        int count = 0;
+                        Thread.sleep(500);
+                        while (client.getPageSource().split("role=\"document\"")[0].contains("loading")) {
+                            Thread.sleep(250);
+                            count++;
+                            if (count > 20) {
+                                failed();
+                                return "";
+                            }
                         }
+                    } catch (InterruptedException ex) {
                     }
-                } catch (InterruptedException ex) {
+
+                    updateMessage("Finished...");
+                    Document doc = Jsoup.parse(client.getPageSource());
+                    doc.getElementsByClass("input-group text-justify center-block col-md-6 col-md-offset-3").remove();
+                    String head
+                            = "<body><head><link href=\"https://fonts.googleapis.com/css?family=Merriweather \" rel=\"stylesheet\"></head>";
+                    if (quitOnFinish) {
+                        client.quit();
+                    }
+                    return head + doc.select("#plaintext").html() + "</body>";
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    failed();
+                    return "";
                 }
-                statusProperty.set("Finished...");
-                Document doc = Jsoup.parse(client.getPageSource());
-                doc.getElementsByClass("input-group text-justify center-block col-md-6 col-md-offset-3").remove();
-                String head
-                        = "<body><head><link href=\"https://fonts.googleapis.com/css?family=Merriweather \" rel=\"stylesheet\"></head>";
-                if (quitOnFinish) {
-                    client.quit();
-                }
-                return head + doc.select("#plaintext").html() + "</body>";
             }
 
             @Override
             protected void failed() {
+                updateMessage("Failed to load page...");
                 service.failed();
             }
         };

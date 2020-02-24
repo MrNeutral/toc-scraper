@@ -38,6 +38,8 @@ public class NovelDetailsRetriever {
             return details;
         }
 
+        details.setTitle(novel.getTitle());
+        details.setStatus(novel.getStatus().toString());
         details.setImageURL(doc.getElementsByClass("seriesimg").get(0).child(0).attr("src"));
 
         List<String> authors = new ArrayList<>();

@@ -4,6 +4,7 @@ import com.neutral.tocscrapergui.App;
 import static com.neutral.tocscrapergui.App.chapterRetrieval;
 import java.net.URL;
 import java.util.ResourceBundle;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
@@ -34,14 +35,20 @@ public class ChapterController implements Initializable {
     }
 
     private void getWebpage() {
-        chapterRetrieval.setLink(link);
-        chapterRetrieval.start();
-        chapterRetrieval.statusProperty().addListener(new ChangeListener<String>() {
+        webView.getEngine().setUserStyleSheetLocation(App.class.getResource("/com/neutral/tocscrapergui/styles.css").toString());
+        SimpleStringProperty content = new SimpleStringProperty();
+        content.bind(chapterRetrieval.messageProperty());
+        content.addListener(new ChangeListener<String>() {
             @Override
             public void changed(ObservableValue<? extends String> ov, String t, String t1) {
-                webView.getEngine().loadContent(chapterRetrieval.statusProperty().get());
+                if (t1.contains("Finished")) {
+                    webView.getEngine().loadContent(chapterRetrieval.valueProperty().get());
+                } else if (!t1.isEmpty()) {
+                    webView.getEngine().loadContent(content.get());
+                }
             }
         });
-        webView.getEngine().setUserStyleSheetLocation(App.class.getResource("/com/neutral/tocscrapergui/styles.css").toString());
+        chapterRetrieval.setLink(link);
+        chapterRetrieval.start();
     }
 }

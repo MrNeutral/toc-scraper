@@ -2,6 +2,7 @@ package com.neutral.tocscrapergui.controllers;
 
 import com.neutral.tocscrapergui.App;
 import static com.neutral.tocscrapergui.App.App;
+import static com.neutral.tocscrapergui.App.LOGGER;
 import static com.neutral.tocscrapergui.App.novelDetailsRetrieval;
 import static com.neutral.tocscrapergui.App.novelRetrieval;
 import com.neutral.tocscrapermodels.ChapterGroup;
@@ -37,7 +38,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import javafx.util.Callback;
-import static com.neutral.tocscrapergui.App.LOGGER;
 
 /**
  * FXML Controller class
@@ -142,9 +142,9 @@ public class MainController implements Initializable {
                                 FXMLLoader loader = new FXMLLoader(App.class.getResource("/fxml/" + "chapter" + ".fxml"));
                                 Scene scene = new Scene(loader.<Parent>load());
                                 stage.setScene(scene);
+                                stage.show();
                                 loader.<ChapterController>getController().setLink(chapter.getItem().getLink());
                                 loader.<ChapterController>getController().getChapter();
-                                stage.show();
                             } catch (IOException e) {
                                 System.out.println(e + e.getMessage());
                                 e.printStackTrace();
@@ -180,8 +180,15 @@ public class MainController implements Initializable {
                             }
                             novelDetailsRetrieval.setNovel(t1);
                             novelDetailsRetrieval.start();
-                            detailsTextArea.textProperty().bind(novelDetailsRetrieval.statusProperty());
-
+                            novelDetailsRetrieval.messageProperty().addListener(new ChangeListener<String>() {
+                                @Override
+                                public void changed(ObservableValue<? extends String> ov, String t, String t1) {
+                                    if (!t1.isEmpty()) {
+                                        detailsTextArea.setText(t1);
+                                    }
+                                }
+                            });
+                            novelDetailsRetrieval.setOnSucceeded(e -> detailsTextArea.setText(novelDetailsRetrieval.valueProperty().get().toString()));
                             if (novelDetailsRetrieval.novelImageProperty().get() != null) {
                                 novelImageView.imageProperty().bind(novelDetailsRetrieval.novelImageProperty());
                             } else {
