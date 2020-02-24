@@ -1,6 +1,5 @@
 package com.neutral.tocscrapermodels;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -9,6 +8,7 @@ import java.util.List;
  */
 public class NovelDetails {
 
+    private String title;
     private String imageURL;
     private String type;
     private String description;
@@ -19,37 +19,39 @@ public class NovelDetails {
     private List<String> authors;
     private String year;
     private String releaseFrequency;
+    private String status;
     private String originalPublisher;
     private String englishPublisher;
 
     public NovelDetails() {
-        this.imageURL = null;
-        this.type = null;
-        this.description = null;
-        this.genre = null;
-        this.tags = null;
-        this.rating = null;
-        this.language = null;
-        this.authors = null;
-        this.year = null;
-        this.releaseFrequency = null;
-        this.originalPublisher = null;
-        this.englishPublisher = null;
+        this.imageURL = "Not found";
+        this.type = "Not found";
+        this.description = "Not found";
+        this.genre = List.of("Not found");
+        this.tags = List.of("Not found");
+        this.rating = "Not found";
+        this.language = "Not found";
+        this.authors = List.of("Not found");
+        this.year = "Not found";
+        this.releaseFrequency = "Not found";
+        this.originalPublisher = "Not found";
+        this.englishPublisher = "Not found";
     }
 
-    public NovelDetails(String imageURL, String type, String description, ArrayList<String> genre, ArrayList<String> tags, String rating, String language, ArrayList<String> authors, String year, String releaseFrequency, String originalPublisher, String englishPublisher) {
-        this.imageURL = imageURL;
-        this.type = type;
-        this.description = description;
-        this.genre = genre;
-        this.tags = tags;
-        this.rating = rating;
-        this.language = language;
-        this.authors = authors;
-        this.year = year;
-        this.releaseFrequency = releaseFrequency;
-        this.originalPublisher = originalPublisher;
-        this.englishPublisher = englishPublisher;
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getStatus() {
+        return status;
     }
 
     /**
@@ -222,7 +224,8 @@ public class NovelDetails {
 
     @Override
     public String toString() {
-        return "Type: " + type + "\n\n"
+        return "Title: " + title + "\n\n"
+                + "Type: " + type + "\n\n"
                 + "Description: " + description + "\n\n"
                 + "Genre: " + genre + "\n\n"
                 + "Tags: " + tags + "\n\n"
@@ -231,6 +234,7 @@ public class NovelDetails {
                 + "Authors: " + authors + "\n\n"
                 + "Year: " + year + "\n\n"
                 + "Release Frequency: " + releaseFrequency + "\n\n"
+                + "Status: " + status + "\n\n"
                 + "Original Publisher: " + originalPublisher + "\n\n"
                 + "English Publisher: " + englishPublisher;
     }
