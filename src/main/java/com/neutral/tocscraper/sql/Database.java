@@ -146,7 +146,6 @@ public class Database {
                     insertNovelStatement.setString(1, novel.getId());
                     insertNovelStatement.setString(2, novel.getTitle());
                     insertNovelStatement.addBatch();
-
                     insertNovelStatusStatement.setString(1, novel.getId());
                     insertNovelStatusStatement.setString(2, novel.getStatus().toString());
                     insertNovelStatusStatement.addBatch();
@@ -337,5 +336,4 @@ public class Database {
             return Integer.compare(o1.size(), o2.size());
         }).get();
     }
-
 }

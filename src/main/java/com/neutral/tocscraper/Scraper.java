@@ -48,7 +48,7 @@ public class Scraper {
         client = new WebClient(BrowserVersion.FIREFOX_60);
         client.getOptions().setPrintContentOnFailingStatusCode(false);
         client.getOptions().setCssEnabled(false);
-        client.getOptions().setJavaScriptEnabled(true);
+        client.getOptions().setJavaScriptEnabled(false);
         client.getOptions().setThrowExceptionOnFailingStatusCode(false);
         client.getOptions().setRedirectEnabled(true);
         client.setJavaScriptTimeout(10000);
@@ -185,9 +185,9 @@ public class Scraper {
         }
 
         if (missing > 0) {
-            LOGGER.log(Level.INFO, "{0} chapters are missing.", missing);
+            LOGGER.log(Level.FINER, "{0} chapters are missing.", missing);
         } else {
-            LOGGER.log(Level.INFO, "No chapters are missing.");
+            LOGGER.log(Level.FINER, "No chapters are missing.");
         }
 
     }
